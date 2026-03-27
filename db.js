@@ -255,7 +255,10 @@ async function init() {
     `);
 
   } else {
-    const Database = require('better-sqlite3');
+    let Database;
+    try { Database = require('better-sqlite3'); } catch(e) {
+      throw new Error('better-sqlite3 not available and DATABASE_URL not set. Set DATABASE_URL to use PostgreSQL.');
+    }
     _sqliteDb = new Database(path.join(__dirname, 'spd-proposal.db'));
     _sqliteDb.pragma('journal_mode = WAL');
     _sqliteDb.pragma('foreign_keys = ON');
