@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "chromium", "nss", "atk", "cups", "gbm", "alsa-lib", "pango", "xorg.libXss", "gtk3", "xorg.libXshmfence"]
+nixPkgs = ["nodejs_20", "chromium", "nss", "atk", "cups", "alsa-lib", "pango", "gtk3", "xorg.libXshmfence", "xorg.libXScrnSaver"]
 
 [start]
 cmd = "node server.js"
