@@ -8,37 +8,45 @@ const { init, seedIfEmpty } = require('./db');
 const routes = require('./routes');
 
 const PORT = process.env.PORT || 3002;
-const db = init();
-seedIfEmpty();
 
-const app = express();
-app.set('trust proxy', 1);
-app.use(compression());
+async function start() {
+  await init();
+  await seedIfEmpty();
 
-// Security headers
-app.use(helmet({
-  contentSecurityPolicy: false
-}));
+  const app = express();
+  app.set('trust proxy', 1);
+  app.use(compression());
 
-// Rate limiting — 200 req/min per IP
-app.use(rateLimit({
-  windowMs: 60 * 1000,
-  max: 200,
-  standardHeaders: true,
-  legacyHeaders: false
-}));
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: false
+  }));
 
-// Basic authentication
-app.use(basicAuth({
-  users: { 'focus': 'flooring2026' },
-  challenge: true,
-  realm: 'SPD Proposal Generator'
-}));
+  // Rate limiting — 200 req/min per IP
+  app.use(rateLimit({
+    windowMs: 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false
+  }));
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(routes);
+  // Basic authentication
+  app.use(basicAuth({
+    users: { 'focus': 'flooring2026' },
+    challenge: true,
+    realm: 'SPD Proposal Generator'
+  }));
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`SPD Proposal Generator listening on port ${PORT}`);
+  app.use(express.json());
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.use(routes);
+
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`SPD Proposal Generator listening on port ${PORT}`);
+  });
+}
+
+start().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
