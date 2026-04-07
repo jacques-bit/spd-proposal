@@ -6,7 +6,14 @@ const { db, getDefaultWoTerms } = require('./db');
 
 function computeProductTotals(product, assemblies) {
   const q = product.quantity || 0;
-  const matCost = q * (product.material_cost || 0);
+  const waste = (product.waste_pct || 0) / 100;
+  const pkg = product.package_qty || 0;
+
+  // Final material qty: apply waste, then round up to package size
+  const matQtyRaw = q * (1 + waste);
+  const matQty = pkg > 0 ? Math.ceil(matQtyRaw / pkg) * pkg : matQtyRaw;
+
+  const matCost = matQty * (product.material_cost || 0);
   const matSell = matCost
     * (1 + (product.material_markup || 0) / 100)
     * (1 + (product.tax_rate || 0) / 100)
@@ -48,6 +55,7 @@ function computeProductTotals(product, assemblies) {
   const gpPct = totalSell > 0 ? (gpAmount / totalSell) * 100 : 0;
 
   return {
+    material_qty: round2(matQty),
     material_sell: round2(matSell),
     material_cost_true: round2(matCost),
     labor_sell: round2(labSell),
