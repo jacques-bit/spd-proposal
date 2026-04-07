@@ -2093,6 +2093,7 @@ function openAddProductModal() {
   setSelect('prod-qty-unit', 'SF');
   setSelect('prod-scope-type', '');
   populateVendorDropdown('prod-vendor-id', null);
+  updateProductCalcPreview();
   openModal('modal-product');
 }
 
@@ -2118,6 +2119,7 @@ function openEditProductModal(id) {
   setVal('prod-lab-cost', product.labor_cost);
   setVal('prod-lab-markup', product.labor_markup);
   populateVendorDropdown('prod-vendor-id', product.vendor_id);
+  updateProductCalcPreview();
   openModal('modal-product');
 }
 

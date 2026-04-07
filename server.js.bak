@@ -8,13 +8,6 @@ const { init, seedIfEmpty } = require('./db');
 const routes = require('./routes');
 
 const PORT = process.env.PORT || 3002;
-const WHITELISTED_IPS = ['67.8.195.116'];
-
-function getClientIP(req) {
-  return (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
-    req.headers['x-real-ip'] ||
-    req.connection.remoteAddress || '';
-}
 
 async function start() {
   await init();
@@ -23,15 +16,26 @@ async function start() {
   const app = express();
   app.set('trust proxy', 1);
   app.use(compression());
-  app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(rateLimit({ windowMs: 60 * 1000, max: 200, standardHeaders: true, legacyHeaders: false }));
 
-  // Skip basic auth for whitelisted IPs
-  app.use((req, res, next) => {
-    const ip = getClientIP(req);
-    if (WHITELISTED_IPS.includes(ip)) return next();
-    basicAuth({ users: { 'focus': 'flooring2026' }, challenge: true, realm: 'SPD Proposal Generator' })(req, res, next);
-  });
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: false
+  }));
+
+  // Rate limiting — 200 req/min per IP
+  app.use(rateLimit({
+    windowMs: 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false
+  }));
+
+  // Basic authentication
+  app.use(basicAuth({
+    users: { 'focus': 'flooring2026' },
+    challenge: true,
+    realm: 'SPD Proposal Generator'
+  }));
 
   app.use(express.json());
   app.use(express.static(path.join(__dirname, 'public')));
@@ -42,4 +46,7 @@ async function start() {
   });
 }
 
-start().catch(err => { console.error('Failed to start server:', err); });
+start().catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
