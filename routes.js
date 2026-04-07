@@ -13,11 +13,12 @@ function computeProductTotals(product, assemblies) {
   const matQtyRaw = q * (1 + waste);
   const matQty = pkg > 0 ? Math.ceil(matQtyRaw / pkg) * pkg : matQtyRaw;
 
-  const matCost = matQty * (product.material_cost || 0);
-  const matSell = matCost
-    * (1 + (product.material_markup || 0) / 100)
+  // True mat cost = qty × unit_cost × tax × vendor_fee (these are real costs)
+  const matCost = matQty * (product.material_cost || 0)
     * (1 + (product.tax_rate || 0) / 100)
     * (1 + (product.vendor_fee || 0) / 100);
+  // Mat sell = mat cost × markup
+  const matSell = matCost * (1 + (product.material_markup || 0) / 100);
   const labCost = q * (product.labor_cost || 0);
   const labSell = labCost * (1 + (product.labor_markup || 0) / 100);
 
