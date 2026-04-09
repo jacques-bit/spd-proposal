@@ -1355,6 +1355,8 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
       <div class="form-row">
         <div class="form-group"><label>Material Cost / Unit ($)</label><input type="number" id="asm-mat-cost" step="0.01" min="0" /></div>
         <div class="form-group"><label>Material Markup (%)</label><input type="number" id="asm-mat-markup" step="0.01" min="0" /></div>
+        <div class="form-group"><label>Tax Rate (%)</label><input type="number" id="asm-tax" step="0.01" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Waste (%)</label><input type="number" id="asm-waste" step="0.1" min="0" placeholder="0" /></div>
         <div class="form-group"><label>Labor Cost / Unit ($)</label><input type="number" id="asm-lab-cost" step="0.01" min="0" /></div>
         <div class="form-group"><label>Labor Markup (%)</label><input type="number" id="asm-lab-markup" step="0.01" min="0" /></div>
       </div>
@@ -1400,6 +1402,8 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
       <div class="form-row">
         <div class="form-group"><label>Material Cost ($)</label><input type="number" id="asm-edit-mat-cost" step="0.01" min="0" /></div>
         <div class="form-group"><label>Material Markup (%)</label><input type="number" id="asm-edit-mat-markup" step="0.01" min="0" /></div>
+        <div class="form-group"><label>Tax Rate (%)</label><input type="number" id="asm-edit-tax" step="0.01" min="0" placeholder="0" /></div>
+        <div class="form-group"><label>Waste (%)</label><input type="number" id="asm-edit-waste" step="0.1" min="0" placeholder="0" /></div>
         <div class="form-group"><label>Labor Cost ($)</label><input type="number" id="asm-edit-lab-cost" step="0.01" min="0" /></div>
         <div class="form-group"><label>Labor Markup (%)</label><input type="number" id="asm-edit-lab-markup" step="0.01" min="0" /></div>
       </div>
@@ -2179,6 +2183,7 @@ function openAddAssemblyModal(productId) {
   setVal('asm-name', ''); setSelect('asm-unit', 'each');
   setVal('asm-spread', ''); setVal('asm-units', '');
   setVal('asm-mat-cost', ''); setVal('asm-mat-markup', '');
+  setVal('asm-tax', ''); setVal('asm-waste', '');
   setVal('asm-lab-cost', ''); setVal('asm-lab-markup', '');
   setChecked('asm-has-labor', false);
   sel.value = '';
@@ -2211,6 +2216,8 @@ async function submitAssemblyForm(e) {
     units_needed: getFloat('asm-units'),
     material_cost: getFloat('asm-mat-cost'),
     material_markup: getFloat('asm-mat-markup'),
+    tax_rate: getFloat('asm-tax'),
+    waste_pct: getFloat('asm-waste'),
     labor_cost: getFloat('asm-lab-cost'),
     labor_markup: getFloat('asm-lab-markup'),
     has_labor: getChecked('asm-has-labor') ? 1 : 0,
@@ -2235,6 +2242,8 @@ function openEditAssemblyModal(id) {
   setVal('asm-edit-units', asm.units_needed || '');
   setVal('asm-edit-mat-cost', asm.material_cost);
   setVal('asm-edit-mat-markup', asm.material_markup);
+  setVal('asm-edit-tax', asm.tax_rate || '');
+  setVal('asm-edit-waste', asm.waste_pct || '');
   setVal('asm-edit-lab-cost', asm.labor_cost);
   setVal('asm-edit-lab-markup', asm.labor_markup);
   setChecked('asm-edit-has-labor', !!asm.has_labor);
@@ -2251,6 +2260,8 @@ async function submitAssemblyEditForm(e) {
     units_needed: getFloat('asm-edit-units'),
     material_cost: getFloat('asm-edit-mat-cost'),
     material_markup: getFloat('asm-edit-mat-markup'),
+    tax_rate: getFloat('asm-edit-tax'),
+    waste_pct: getFloat('asm-edit-waste'),
     labor_cost: getFloat('asm-edit-lab-cost'),
     labor_markup: getFloat('asm-edit-lab-markup'),
     has_labor: getChecked('asm-edit-has-labor') ? 1 : 0,

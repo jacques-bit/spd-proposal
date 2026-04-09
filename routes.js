@@ -30,12 +30,20 @@ function computeProductTotals(product, assemblies) {
       ? Math.ceil(q / a.spread_rate)
       : (a.units_needed || 0);
 
-    const asmMatSell = unitsNeeded * (a.material_cost || 0) * (1 + (a.material_markup || 0) / 100);
+    // Apply waste to assembly units if waste_pct set
+    const asmWaste = (a.waste_pct || 0) / 100;
+    const asmMatUnits = a.waste_pct > 0 ? Math.ceil(unitsNeeded * (1 + asmWaste)) : unitsNeeded;
+
+    // Assembly mat cost includes tax_rate
+    const asmMatCostUnit = (a.material_cost || 0) * (1 + (a.tax_rate || 0) / 100);
+    const asmMatCost = asmMatUnits * asmMatCostUnit;
+    const asmMatSell = asmMatCost * (1 + (a.material_markup || 0) / 100);
+
     const asmLabSell = a.has_labor
       ? unitsNeeded * (a.labor_cost || 0) * (1 + (a.labor_markup || 0) / 100)
       : 0;
     const asmTotalSell = asmMatSell + asmLabSell;
-    const asmTotalCost = unitsNeeded * ((a.material_cost || 0) + (a.labor_cost || 0));
+    const asmTotalCost = asmMatCost + (a.has_labor ? unitsNeeded * (a.labor_cost || 0) : 0);
 
     asmSell += asmTotalSell;
     asmCost += asmTotalCost;
@@ -393,7 +401,7 @@ router.delete('/api/products/:id', async (req, res) => {
 
 router.post('/api/products/:id/assemblies', async (req, res) => {
   try {
-    let { catalog_id, name, unit, spread_rate, units_needed, material_cost, material_markup, labor_cost, labor_markup, has_labor, vendor_id } = req.body;
+    let { catalog_id, name, unit, spread_rate, units_needed, material_cost, material_markup, tax_rate, waste_pct, labor_cost, labor_markup, has_labor, vendor_id } = req.body;
 
     if (catalog_id) {
       const cat = await db.get('SELECT * FROM assembly_catalog WHERE id = ?', [catalog_id]);
@@ -418,11 +426,12 @@ router.post('/api/products/:id/assemblies', async (req, res) => {
 
     const result = await db.run(
       `INSERT INTO product_assemblies
-        (product_id, catalog_id, name, unit, spread_rate, units_needed, material_cost, material_markup, labor_cost, labor_markup, has_labor, vendor_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        (product_id, catalog_id, name, unit, spread_rate, units_needed, material_cost, material_markup, tax_rate, waste_pct, labor_cost, labor_markup, has_labor, vendor_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [req.params.id, catalog_id || null, name, unit || 'each',
         spread_rate || null, units_needed || 0,
-        material_cost || 0, material_markup || 0, labor_cost || 0, labor_markup || 0, has_labor ? 1 : 0,
+        material_cost || 0, material_markup || 0, tax_rate || 0, waste_pct || 0,
+        labor_cost || 0, labor_markup || 0, has_labor ? 1 : 0,
         vendor_id || null]
     );
     res.json(await db.get('SELECT * FROM product_assemblies WHERE id = ?', [result.lastInsertRowid]));
@@ -431,7 +440,7 @@ router.post('/api/products/:id/assemblies', async (req, res) => {
 
 router.put('/api/assemblies/:id', async (req, res) => {
   try {
-    let { name, unit, spread_rate, units_needed, material_cost, material_markup, labor_cost, labor_markup, has_labor, vendor_id } = req.body;
+    let { name, unit, spread_rate, units_needed, material_cost, material_markup, tax_rate, waste_pct, labor_cost, labor_markup, has_labor, vendor_id } = req.body;
 
     const asm = await db.get('SELECT product_id FROM product_assemblies WHERE id = ?', [req.params.id]);
     if (asm) {
@@ -445,11 +454,11 @@ router.put('/api/assemblies/:id', async (req, res) => {
     await db.run(
       `UPDATE product_assemblies SET
         name=?, unit=?, spread_rate=?, units_needed=?, material_cost=?, material_markup=?,
-        labor_cost=?, labor_markup=?, has_labor=?, vendor_id=?
+        tax_rate=?, waste_pct=?, labor_cost=?, labor_markup=?, has_labor=?, vendor_id=?
        WHERE id=?`,
       [name, unit || 'each', spread_rate || null, units_needed || 0,
-        material_cost || 0, material_markup || 0, labor_cost || 0, labor_markup || 0,
-        has_labor ? 1 : 0, vendor_id || null, req.params.id]
+        material_cost || 0, material_markup || 0, tax_rate || 0, waste_pct || 0,
+        labor_cost || 0, labor_markup || 0, has_labor ? 1 : 0, vendor_id || null, req.params.id]
     );
     res.json(await db.get('SELECT * FROM product_assemblies WHERE id = ?', [req.params.id]));
   } catch (e) { res.status(500).json({ error: e.message }); }

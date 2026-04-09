@@ -182,6 +182,8 @@ async function init() {
         units_needed REAL,
         material_cost REAL DEFAULT 0,
         material_markup REAL DEFAULT 0,
+        tax_rate REAL DEFAULT 0,
+        waste_pct REAL DEFAULT 0,
         labor_cost REAL DEFAULT 0,
         labor_markup REAL DEFAULT 0,
         has_labor INTEGER DEFAULT 0,
@@ -349,6 +351,8 @@ async function init() {
         units_needed REAL,
         material_cost REAL DEFAULT 0,
         material_markup REAL DEFAULT 0,
+        tax_rate REAL DEFAULT 0,
+        waste_pct REAL DEFAULT 0,
         labor_cost REAL DEFAULT 0,
         labor_markup REAL DEFAULT 0,
         has_labor INTEGER DEFAULT 0,
@@ -432,6 +436,8 @@ async function init() {
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN package_qty REAL DEFAULT 0`);
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN scope_type TEXT`);
     safeAlter(`ALTER TABLE product_assemblies ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
+    safeAlter(`ALTER TABLE product_assemblies ADD COLUMN tax_rate REAL DEFAULT 0`);
+    safeAlter(`ALTER TABLE product_assemblies ADD COLUMN waste_pct REAL DEFAULT 0`);
   }
 }
 
