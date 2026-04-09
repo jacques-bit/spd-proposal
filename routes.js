@@ -798,7 +798,10 @@ router.post('/api/generate-pdf', async (req, res) => {
 
     const browser = await puppeteer.launch({
       headless: 'new',
-      executablePath: process.env.CHROMIUM_PATH || require('puppeteer').executablePath(),
+      executablePath: (() => {
+        try { return require('puppeteer').executablePath(); }
+        catch(e) { return undefined; }
+      })(),
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
     const page = await browser.newPage();
