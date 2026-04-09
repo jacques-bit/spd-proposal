@@ -3576,56 +3576,131 @@ async function submitManualPO() {
 
 
 async function exportClientPDF() {
-  // Get the rendered client doc HTML
-  const docHtml = document.getElementById('client-doc').innerHTML;
   const data = currentProposalData;
-  const title = (data ? data.name : 'Proposal') + ' — Client Proposal';
+  if (!data) return;
+  const title = data.name + ' — Client Proposal';
+  const date = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-  // Build a standalone HTML page
+  // Get logo base64 from the client doc img
+  const logoImg = document.querySelector('#client-doc .client-header-logo img, #client-doc img');
+  const logoSrc = logoImg ? logoImg.src : '';
+
+  // Group products by scope type
+  const byScope = {};
+  const noScope = [];
+  (data.products || []).forEach(p => {
+    if (p.scope_type) {
+      if (!byScope[p.scope_type]) byScope[p.scope_type] = [];
+      byScope[p.scope_type].push(p);
+    } else {
+      noScope.push(p);
+    }
+  });
+
+  // Build scope rows
+  let scopeRows = '';
+  const addRows = (products, groupLabel) => {
+    if (!products.length) return;
+    if (groupLabel) {
+      scopeRows += `<tr><td colspan="3" style="background:#414042;color:#cce70b;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:5px 10px;">${esc(groupLabel)}</td></tr>`;
+    }
+    products.forEach(p => {
+      const name = p.product_name || '';
+      const qty = p.quantity > 0 ? `${p.quantity} ${p.quantity_unit || ''}` : '';
+      const lead = p.lead_time_days > 0 ? `${p.lead_time_days}d` : '';
+      const total = fmt(p.total_sell || 0);
+      scopeRows += `<tr>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;color:#171d1a;">
+          <strong>${esc(name)}</strong>${qty ? `<span style="color:#6b6b6c;margin-left:6px;font-size:10px;">Qty: ${esc(qty)}</span>` : ''}
+        </td>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;color:#6b6b6c;text-align:center;">${lead}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;font-weight:700;text-align:right;">${total}</td>
+      </tr>`;
+      // Subtotal per scope group - add after last item in group
+    });
+    // Subtotal
+    const groupTotal = products.reduce((s,p) => s + (p.total_sell || 0), 0);
+    scopeRows += `<tr>
+      <td colspan="2" style="padding:4px 10px 8px;font-size:10px;font-weight:700;color:#414042;text-align:right;text-transform:uppercase;letter-spacing:.05em;">Subtotal</td>
+      <td style="padding:4px 10px 8px;font-size:11px;font-weight:800;text-align:right;color:#171d1a;">${fmt(groupTotal)}</td>
+    </tr>`;
+  };
+
+  Object.keys(byScope).sort().forEach(scope => addRows(byScope[scope], scope));
+  if (noScope.length) addRows(noScope, 'OTHER');
+
+  // Build notes
+  const notesHtml = data.notes ? `<div style="margin-top:12px;padding:10px 12px;background:#f9f9f7;border-left:3px solid #cce70b;font-size:10px;color:#414042;"><strong>Notes</strong><br>${esc(data.notes)}</div>` : '';
+
   const html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${title}</title>
 <style>
-@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 400; src: url('https://spd.duvalstrong.com/fonts/nunito-400.woff2') format('woff2'); }
-@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 600; src: url('https://spd.duvalstrong.com/fonts/nunito-600.woff2') format('woff2'); }
-@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 700; src: url('https://spd.duvalstrong.com/fonts/nunito-700.woff2') format('woff2'); }
-@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 800; src: url('https://spd.duvalstrong.com/fonts/nunito-800.woff2') format('woff2'); }
-</style>
-<style>
-@page { margin: 0.5in; size: auto; }
+@page { margin: 0.45in; size: letter; }
 * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Nunito Sans', Helvetica, Arial, sans-serif; background: #f1f1f1; }
-.client-doc { max-width: 760px; margin: 0 auto; padding: 28px 24px 48px; }
-.client-header { background: #171d1a !important; color: #f1f1f1; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.client-header img { height: 44px; width: auto; }
-.client-header-info { text-align: right; }
-.client-header-info h1 { font-size: 20px; font-weight: 800; color: #cce70b; margin-bottom: 2px; }
-.client-header-info p { font-size: 12px; color: rgba(241,241,241,0.7); margin: 1px 0; }
-.client-client-block { background: #fff !important; border-radius: 10px; border: 1px solid #d8d8d8; padding: 16px 20px; margin-bottom: 16px; }
-.client-client-block h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #414042; margin-bottom: 8px; }
-.client-client-block p { font-size: 15px; font-weight: 700; color: #171d1a; }
-.client-client-block span { font-size: 13px; color: #6b6b6c; }
-.client-table-wrap { background: #fff !important; border-radius: 10px; border: 1px solid #d8d8d8; overflow: hidden; margin-bottom: 16px; }
-.client-table-wrap h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #414042; padding: 14px 18px 0; margin: 0 0 10px; }
-.client-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.client-table th { background: #414042 !important; color: #f1f1f1; font-weight: 700; padding: 10px 14px; text-align: left; font-size: 12px; }
-.client-table th:last-child { text-align: right; }
-.client-table td { padding: 12px 14px; border-bottom: 1px solid #e8e8e8; color: #171d1a; vertical-align: top; }
-.client-table td:last-child { text-align: right; font-weight: 700; }
-.client-table tr:last-child td { border-bottom: none; }
-.client-totals { background: #171d1a !important; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.client-totals-label { color: rgba(241,241,241,0.7); font-size: 12px; font-weight: 600; }
-.client-totals-value { color: #f1f1f1; font-size: 18px; font-weight: 800; }
-.client-totals-gp .client-totals-value { color: #cce70b; font-size: 26px; }
-.client-footer { text-align: center; color: #6b6b6c; font-size: 11px; padding-top: 16px; border-top: 1px solid #d8d8d8; }
-@media print { .no-print { display: none !important; } }
+body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #171d1a; background: #fff; }
 </style>
 </head>
 <body>
-<div class="client-doc">${docHtml}</div>
+
+<!-- HEADER -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#171d1a;border-radius:8px;margin-bottom:14px;">
+  <tr>
+    <td style="padding:14px 18px;vertical-align:middle;">
+      <img src="${logoSrc}" style="height:36px;width:auto;" alt="Focus Flooring">
+    </td>
+    <td style="padding:14px 18px;vertical-align:middle;text-align:right;">
+      <div style="font-size:16px;font-weight:800;color:#cce70b;line-height:1.1;">${esc(data.name)}</div>
+      <div style="font-size:10px;color:rgba(241,241,241,0.7);margin-top:2px;">Project Proposal &nbsp;|&nbsp; ${date} &nbsp;|&nbsp; Ref: #${String(data.id).padStart(4,'0')}</div>
+    </td>
+  </tr>
+</table>
+
+<!-- CLIENT INFO -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;border:1px solid #e0e0e0;border-radius:6px;">
+  <tr>
+    <td style="padding:10px 14px;">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#6b6b6c;margin-bottom:4px;">Prepared For</div>
+      <div style="font-size:13px;font-weight:700;color:#171d1a;">${esc(data.client_name || '')}</div>
+      ${data.project_address ? `<div style="font-size:10px;color:#6b6b6c;margin-top:2px;">${esc(data.project_address)}</div>` : ''}
+    </td>
+  </tr>
+</table>
+
+<!-- SCOPE TABLE -->
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;margin-bottom:12px;">
+  <thead>
+    <tr style="background:#414042;">
+      <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:#f1f1f1;text-transform:uppercase;letter-spacing:.05em;">Product / Scope</th>
+      <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;color:#f1f1f1;text-transform:uppercase;letter-spacing:.05em;width:70px;">Lead Time</th>
+      <th style="padding:8px 10px;text-align:right;font-size:10px;font-weight:700;color:#f1f1f1;text-transform:uppercase;letter-spacing:.05em;width:90px;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${scopeRows}
+  </tbody>
+</table>
+
+<!-- TOTAL BAR -->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#171d1a;border-radius:6px;margin-bottom:12px;">
+  <tr>
+    <td style="padding:12px 16px;color:rgba(241,241,241,0.7);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Total Investment</td>
+    <td style="padding:12px 16px;text-align:right;">
+      <span style="font-size:20px;font-weight:800;color:#f1f1f1;">${fmt(data.grand_total_sell || 0)}</span>
+    </td>
+  </tr>
+</table>
+
+${notesHtml}
+
+<!-- FOOTER -->
+<div style="margin-top:16px;padding-top:10px;border-top:1px solid #e0e0e0;text-align:center;font-size:9px;color:#9b9b9c;">
+  Focus Flooring Solutions &nbsp;|&nbsp; 5000 Acline Dr E, Tampa FL 33619 &nbsp;|&nbsp; focusflooring.com<br>
+  This proposal is valid for 30 days from the date above. Pricing is subject to final site verification and material availability.
+</div>
+
 </body>
 </html>`;
 
