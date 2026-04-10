@@ -905,14 +905,14 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
             <div id="dash-accepted" style="font-size:36px;font-weight:800;color:#6b6500;line-height:1">0</div>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:20px">
           <!-- Status breakdown -->
-          <div style="background:#fff;border-radius:14px;border:1px solid #d8d8d8;box-shadow:0 2px 8px rgba(65,64,66,0.06);padding:18px 20px">
+          <div style="background:#fff;border-radius:14px;border:1px solid #d8d8d8;box-shadow:0 2px 8px rgba(65,64,66,0.06);padding:18px 20px;min-width:0">
             <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#414042;margin-bottom:14px">Pipeline by Status</div>
             <div id="dash-status-bars" style="display:flex;flex-direction:column;gap:10px"></div>
           </div>
           <!-- GP distribution -->
-          <div style="background:#fff;border-radius:14px;border:1px solid #d8d8d8;box-shadow:0 2px 8px rgba(65,64,66,0.06);padding:18px 20px">
+          <div style="background:#fff;border-radius:14px;border:1px solid #d8d8d8;box-shadow:0 2px 8px rgba(65,64,66,0.06);padding:18px 20px;min-width:0">
             <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#414042;margin-bottom:14px">GP by Proposal</div>
             <div id="dash-gp-bars" style="display:flex;flex-direction:column;gap:8px"></div>
           </div>
@@ -1792,9 +1792,9 @@ async function loadProposals() {
     const gp = p.grand_gp_pct||0;
     const barColor = gp>=35?'#cce70b':gp>=25?'#171d1a':'#ef4444';
     const textColor = gp>=35?'#6b6500':gp>=25?'#b45309':'#ef4444';
-    return `<div style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:2px 0" onclick="openProposal(${p.id})">
-      <div style="font-size:12px;color:var(--text);min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(p.name)}">${esc(p.name)}</div>
-      <div style="flex:1;height:16px;border-radius:4px;background:var(--border);overflow:hidden">
+    return `<div style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:2px 0;min-width:0" onclick="openProposal(${p.id})">
+      <div style="font-size:11px;color:var(--text);min-width:0;width:35%;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(p.name)}">${esc(p.name)}</div>
+      <div style="flex:1;min-width:0;height:14px;border-radius:4px;background:var(--border);overflow:hidden">
         <div style="height:100%;width:${(gp/maxGP*100).toFixed(1)}%;background:${barColor};border-radius:4px"></div>
       </div>
       <div style="font-size:12px;font-weight:700;color:${textColor};min-width:40px;text-align:right">${gp.toFixed(1)}%</div>
