@@ -115,6 +115,8 @@ async function init() {
         unit TEXT NOT NULL DEFAULT 'each',
         spread_rate REAL,
         material_cost REAL DEFAULT 0,
+        tax_rate REAL DEFAULT 0,
+        waste_pct REAL DEFAULT 0,
         labor_cost REAL DEFAULT 0,
         has_labor INTEGER DEFAULT 0,
         vendor_id INTEGER REFERENCES vendors(id),
@@ -284,6 +286,8 @@ async function init() {
         unit TEXT NOT NULL DEFAULT 'each',
         spread_rate REAL,
         material_cost REAL DEFAULT 0,
+        tax_rate REAL DEFAULT 0,
+        waste_pct REAL DEFAULT 0,
         labor_cost REAL DEFAULT 0,
         has_labor INTEGER DEFAULT 0,
         vendor_id INTEGER REFERENCES vendors(id),
@@ -430,6 +434,8 @@ async function init() {
     safeAlter(`ALTER TABLE proposals ADD COLUMN status TEXT DEFAULT 'draft'`);
     safeAlter(`ALTER TABLE proposals ADD COLUMN notes TEXT`);
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN tax_rate REAL DEFAULT 0`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN waste_pct REAL DEFAULT 0`);
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN lead_time_days INTEGER DEFAULT 0`);
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN waste_pct REAL DEFAULT 0`);

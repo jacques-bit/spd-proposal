@@ -1454,7 +1454,12 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
       <div class="form-row">
         <div class="form-group"><label>Spread Rate (SF/unit)</label><input type="number" id="cat-spread" step="0.01" min="0" /></div>
         <div class="form-group"><label>Material Cost ($)</label><input type="number" id="cat-mat-cost" step="0.01" min="0" /></div>
+        <div class="form-group"><label>Tax Rate (%)</label><input type="number" id="cat-tax" step="0.01" min="0" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Waste (%)</label><input type="number" id="cat-waste" step="0.01" min="0" /></div>
         <div class="form-group"><label>Labor Cost ($)</label><input type="number" id="cat-lab-cost" step="0.01" min="0" /></div>
+        <div class="form-group"></div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -2200,6 +2205,8 @@ function prefillFromCatalog() {
   setSelect('asm-unit', cat.unit);
   setVal('asm-spread', cat.spread_rate || '');
   setVal('asm-mat-cost', cat.material_cost);
+  setVal('asm-tax', cat.tax_rate || '');
+  setVal('asm-waste', cat.waste_pct || '');
   setVal('asm-lab-cost', cat.labor_cost);
   setChecked('asm-has-labor', !!cat.has_labor);
   populateVendorDropdown('asm-vendor-id', cat.vendor_id || null);
@@ -2621,7 +2628,7 @@ function openCatalogModal(id) {
       document.getElementById('modal-catalog-title').textContent = 'Edit Catalog Item';
       setVal('cat-name', c.name); setVal('cat-desc', c.description);
       setSelect('cat-unit', c.unit); setVal('cat-spread', c.spread_rate || '');
-      setVal('cat-mat-cost', c.material_cost); setVal('cat-lab-cost', c.labor_cost);
+      setVal('cat-mat-cost', c.material_cost); setVal('cat-tax', c.tax_rate || ''); setVal('cat-waste', c.waste_pct || ''); setVal('cat-lab-cost', c.labor_cost);
       setChecked('cat-has-labor', !!c.has_labor);
       populateVendorDropdown('cat-vendor-id', c.vendor_id || null);
       openModal('modal-catalog');
@@ -2629,7 +2636,7 @@ function openCatalogModal(id) {
   } else {
     document.getElementById('modal-catalog-title').textContent = 'Add Catalog Item';
     setVal('cat-name', ''); setVal('cat-desc', ''); setSelect('cat-unit', 'each');
-    setVal('cat-spread', ''); setVal('cat-mat-cost', ''); setVal('cat-lab-cost', '');
+    setVal('cat-spread', ''); setVal('cat-mat-cost', ''); setVal('cat-tax', ''); setVal('cat-waste', ''); setVal('cat-lab-cost', '');
     setChecked('cat-has-labor', false);
     populateVendorDropdown('cat-vendor-id', null);
     openModal('modal-catalog');
@@ -2641,6 +2648,7 @@ async function submitCatalogForm(e) {
   const body = {
     name: getVal('cat-name'), description: getVal('cat-desc'), unit: getVal('cat-unit'),
     spread_rate: getFloat('cat-spread') || null, material_cost: getFloat('cat-mat-cost'),
+    tax_rate: getFloat('cat-tax'), waste_pct: getFloat('cat-waste'),
     labor_cost: getFloat('cat-lab-cost'), has_labor: getChecked('cat-has-labor') ? 1 : 0,
     vendor_id: parseInt(getVal('cat-vendor-id')) || null,
   };
@@ -2998,7 +3006,7 @@ async function loadPurchaseOrders() {
 }
 
 async function generatePurchaseOrders() {
-  if (!confirm('Generate POs from all vendor-assigned products and assemblies? Existing POs will not be affected.')) return;
+  if (!confirm('Generate POs from all vendor-assigned products and assemblies? Existing draft POs for the same proposal/vendor will be updated instead of duplicated.')) return;
   try {
     const created = await api('POST', `/api/proposals/${currentProposalId}/purchase-orders/generate`, {});
     alert(`Created ${created.length} Purchase Order${created.length !== 1 ? 's' : ''}`);

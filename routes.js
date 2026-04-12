@@ -204,11 +204,11 @@ router.get('/api/catalog', async (req, res) => {
 
 router.post('/api/catalog', async (req, res) => {
   try {
-    const { name, description, unit, spread_rate, material_cost, labor_cost, has_labor, vendor_id } = req.body;
+    const { name, description, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
     if (!name || !unit) return res.status(400).json({ error: 'name and unit required' });
     const result = await db.run(
-      `INSERT INTO assembly_catalog (name, description, unit, spread_rate, material_cost, labor_cost, has_labor, vendor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, description || null, unit, spread_rate || null, material_cost || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null]
+      `INSERT INTO assembly_catalog (name, description, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null]
     );
     res.json(await db.get('SELECT * FROM assembly_catalog WHERE id = ?', [result.lastInsertRowid]));
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -216,10 +216,10 @@ router.post('/api/catalog', async (req, res) => {
 
 router.put('/api/catalog/:id', async (req, res) => {
   try {
-    const { name, description, unit, spread_rate, material_cost, labor_cost, has_labor, vendor_id } = req.body;
+    const { name, description, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
     await db.run(
-      `UPDATE assembly_catalog SET name=?, description=?, unit=?, spread_rate=?, material_cost=?, labor_cost=?, has_labor=?, vendor_id=? WHERE id=?`,
-      [name, description || null, unit, spread_rate || null, material_cost || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null, req.params.id]
+      `UPDATE assembly_catalog SET name=?, description=?, unit=?, spread_rate=?, material_cost=?, tax_rate=?, waste_pct=?, labor_cost=?, has_labor=?, vendor_id=? WHERE id=?`,
+      [name, description || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null, req.params.id]
     );
     res.json(await db.get('SELECT * FROM assembly_catalog WHERE id = ?', [req.params.id]));
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -410,6 +410,8 @@ router.post('/api/products/:id/assemblies', async (req, res) => {
         unit = unit || cat.unit;
         spread_rate = spread_rate !== undefined ? spread_rate : cat.spread_rate;
         material_cost = material_cost !== undefined ? material_cost : cat.material_cost;
+        tax_rate = tax_rate !== undefined ? tax_rate : cat.tax_rate;
+        waste_pct = waste_pct !== undefined ? waste_pct : cat.waste_pct;
         labor_cost = labor_cost !== undefined ? labor_cost : cat.labor_cost;
         has_labor = has_labor !== undefined ? has_labor : cat.has_labor;
         vendor_id = vendor_id !== undefined ? vendor_id : cat.vendor_id;
@@ -709,16 +711,31 @@ router.post('/api/proposals/:id/purchase-orders/generate', async (req, res) => {
     const createdPOs = [];
 
     for (const [vendorId, data] of Object.entries(vendorItems)) {
-      const seq = String(seqStart++).padStart(4, '0');
-      const po_number = `PO-${year}-${seq}`;
       const totalCost = data.items.reduce((s, i) => s + i.total_cost, 0);
 
-      const poResult = await db.run(
-        `INSERT INTO purchase_orders (proposal_id, vendor_id, po_number, status, total_cost) VALUES (?, ?, ?, 'draft', ?)`,
-        [proposalId, vendorId, po_number, round2(totalCost)]
+      let existingPo = await db.get(
+        `SELECT * FROM purchase_orders WHERE proposal_id = ? AND vendor_id = ? AND status = 'draft' ORDER BY id DESC LIMIT 1`,
+        [proposalId, vendorId]
       );
 
-      const poId = poResult.lastInsertRowid;
+      let poId;
+      if (existingPo) {
+        poId = existingPo.id;
+        await db.run(`DELETE FROM purchase_order_items WHERE po_id = ?`, [poId]);
+        await db.run(
+          `UPDATE purchase_orders SET total_cost = ?, notes = COALESCE(notes, NULL) WHERE id = ?`,
+          [round2(totalCost), poId]
+        );
+      } else {
+        const seq = String(seqStart++).padStart(4, '0');
+        const po_number = `PO-${year}-${seq}`;
+        const poResult = await db.run(
+          `INSERT INTO purchase_orders (proposal_id, vendor_id, po_number, status, total_cost) VALUES (?, ?, ?, 'draft', ?)`,
+          [proposalId, vendorId, po_number, round2(totalCost)]
+        );
+        poId = poResult.lastInsertRowid;
+      }
+
       for (const item of data.items) {
         await db.run(
           `INSERT INTO purchase_order_items (po_id, item_type, item_name, description, quantity, unit, unit_cost, total_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
