@@ -375,13 +375,50 @@ tr:hover td { background: rgba(204,231,11,0.06); }
 .product-details-section {
   padding: 18px 22px;
   border-bottom: 1px solid var(--border);
-  background: #f7f7f7;
+  background: linear-gradient(180deg, #fafafa 0%, #f5f5f5 100%);
+}
+.product-math-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+.product-math-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 8px rgba(65,64,66,0.05);
+  min-width: 0;
+}
+.product-math-card.summary {
+  background: linear-gradient(180deg, rgba(204,231,11,0.10) 0%, rgba(204,231,11,0.04) 100%);
+  border-color: rgba(166,178,8,0.35);
+}
+.product-math-title {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  margin-bottom: 10px;
 }
 .product-details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 10px;
   font-size: 13px;
+}
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(65,64,66,0.10);
+}
+.detail-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 .detail-item label {
   font-size: 11px;
@@ -389,13 +426,23 @@ tr:hover td { background: rgba(204,231,11,0.06); }
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: block;
-  margin-bottom: 2px;
-  font-weight: 600;
+  margin-bottom: 0;
+  font-weight: 700;
 }
 .detail-item .detail-val {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text);
+  text-align: right;
+}
+.detail-item.highlight .detail-val {
+  color: #6b6500;
+  font-size: 17px;
+}
+@media (max-width: 640px) {
+  .product-details-section { padding: 14px; }
+  .product-math-groups { grid-template-columns: 1fr; gap: 10px; }
+  .product-math-card { padding: 12px 14px; }
 }
 
 /* ── Assembly Table (compact) ── */
@@ -2044,20 +2091,36 @@ function renderProductCard(p) {
 
       <div class="product-card-body" id="product-details-${p.id}" style="display:none;">
         <div class="product-details-section">
-          <div class="product-details-grid">
-            <div class="detail-item"><label>Mat. Cost/Unit</label><div class="detail-val">${fmt(p.material_cost)}</div></div>
-            <div class="detail-item"><label>Mat. Markup</label><div class="detail-val">${p.material_markup}%</div></div>
-            <div class="detail-item"><label>Tax Rate</label><div class="detail-val">${p.tax_rate}%</div></div>
-            <div class="detail-item"><label>Vendor Fee</label><div class="detail-val">${p.vendor_fee}%</div></div>
-            <div class="detail-item"><label>Material Qty</label><div class="detail-val">${p.material_qty}</div></div>
-            <div class="detail-item"><label>Mat. GP</label><div class="detail-val">${fmt(p.material_gp_amount || 0)}</div></div>
-            <div class="detail-item"><label>Labor Cost/Unit</label><div class="detail-val">${fmt(p.labor_cost)}</div></div>
-            <div class="detail-item"><label>Labor Markup</label><div class="detail-val">${p.labor_markup}%</div></div>
-            <div class="detail-item"><label>Labor GP</label><div class="detail-val">${fmt(p.labor_gp_amount || 0)}</div></div>
-            <div class="detail-item"><label>Asm. GP</label><div class="detail-val">${fmt(p.assembly_gp_amount || 0)}</div></div>
-            <div class="detail-item"><label>Total Cost</label><div class="detail-val">${fmt(p.total_cost)}</div></div>
-            <div class="detail-item"><label>Total Sell</label><div class="detail-val">${fmt(p.total_sell)}</div></div>
-            <div class="detail-item"><label>GP $</label><div class="detail-val">${fmt(p.gp_amount)}</div></div>
+          <div class="product-math-groups">
+            <div class="product-math-card">
+              <div class="product-math-title">Material</div>
+              <div class="product-details-grid">
+                <div class="detail-item"><label>Cost / Unit</label><div class="detail-val">${fmt(p.material_cost)}</div></div>
+                <div class="detail-item"><label>Markup</label><div class="detail-val">${p.material_markup}%</div></div>
+                <div class="detail-item"><label>Tax Rate</label><div class="detail-val">${p.tax_rate}%</div></div>
+                <div class="detail-item"><label>Vendor Fee</label><div class="detail-val">${p.vendor_fee}%</div></div>
+                <div class="detail-item"><label>Material Qty</label><div class="detail-val">${p.material_qty}</div></div>
+                <div class="detail-item highlight"><label>Material GP</label><div class="detail-val">${fmt(p.material_gp_amount || 0)}</div></div>
+              </div>
+            </div>
+            <div class="product-math-card">
+              <div class="product-math-title">Labor & Assembly</div>
+              <div class="product-details-grid">
+                <div class="detail-item"><label>Labor Cost / Unit</label><div class="detail-val">${fmt(p.labor_cost)}</div></div>
+                <div class="detail-item"><label>Labor Markup</label><div class="detail-val">${p.labor_markup}%</div></div>
+                <div class="detail-item"><label>Labor GP</label><div class="detail-val">${fmt(p.labor_gp_amount || 0)}</div></div>
+                <div class="detail-item"><label>Assembly GP</label><div class="detail-val">${fmt(p.assembly_gp_amount || 0)}</div></div>
+              </div>
+            </div>
+            <div class="product-math-card summary">
+              <div class="product-math-title">Summary</div>
+              <div class="product-details-grid">
+                <div class="detail-item"><label>Total Cost</label><div class="detail-val">${fmt(p.total_cost)}</div></div>
+                <div class="detail-item"><label>Total Sell</label><div class="detail-val">${fmt(p.total_sell)}</div></div>
+                <div class="detail-item highlight"><label>GP $</label><div class="detail-val">${fmt(p.gp_amount)}</div></div>
+                <div class="detail-item highlight"><label>GP %</label><div class="detail-val">${fmtPct(p.gp_pct)}</div></div>
+              </div>
+            </div>
           </div>
         </div>
 
