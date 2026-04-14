@@ -9,44 +9,62 @@ function computeProductTotals(product, assemblies) {
   const waste = (product.waste_pct || 0) / 100;
   const pkg = product.package_qty || 0;
 
-  // Final material qty: apply waste, then round up to package size
+  // Material quantity: net qty -> add waste -> round up to package qty
   const matQtyRaw = q * (1 + waste);
   const matQty = pkg > 0 ? Math.ceil(matQtyRaw / pkg) * pkg : matQtyRaw;
 
-  // True mat cost = qty × unit_cost × tax × vendor_fee (these are real costs)
-  const matCost = matQty * (product.material_cost || 0)
+  // Product material: tax + vendor fee are cost only, never GP
+  const matCostUnitTrue = (product.material_cost || 0)
     * (1 + (product.tax_rate || 0) / 100)
     * (1 + (product.vendor_fee || 0) / 100);
-  // Mat sell = mat cost × markup
-  const matSell = matCost * (1 + (product.material_markup || 0) / 100);
-  const labCost = q * (product.labor_cost || 0);
-  const labSell = labCost * (1 + (product.labor_markup || 0) / 100);
+  const matGpUnit = matCostUnitTrue * ((product.material_markup || 0) / 100);
+  const matSellUnit = matCostUnitTrue + matGpUnit;
+  const matCost = matQty * matCostUnitTrue;
+  const matGp = matQty * matGpUnit;
+  const matSell = matQty * matSellUnit;
+
+  // Product labor: GP is markup dollars only
+  const labCostUnit = product.labor_cost || 0;
+  const labGpUnit = labCostUnit * ((product.labor_markup || 0) / 100);
+  const labSellUnit = labCostUnit + labGpUnit;
+  const labCost = q * labCostUnit;
+  const labGp = q * labGpUnit;
+  const labSell = q * labSellUnit;
 
   let asmSell = 0;
   let asmCost = 0;
+  let asmGp = 0;
 
   const enrichedAssemblies = assemblies.map(a => {
     const unitsNeeded = (a.spread_rate && a.spread_rate > 0)
       ? Math.ceil(q / a.spread_rate)
       : (a.units_needed || 0);
 
-    // Apply waste to assembly units if waste_pct set
     const asmWaste = (a.waste_pct || 0) / 100;
     const asmMatUnits = a.waste_pct > 0 ? Math.ceil(unitsNeeded * (1 + asmWaste)) : unitsNeeded;
 
-    // Assembly mat cost includes tax_rate
+    // Assembly material: tax is cost only
     const asmMatCostUnit = (a.material_cost || 0) * (1 + (a.tax_rate || 0) / 100);
+    const asmMatGpUnit = asmMatCostUnit * ((a.material_markup || 0) / 100);
+    const asmMatSellUnit = asmMatCostUnit + asmMatGpUnit;
     const asmMatCost = asmMatUnits * asmMatCostUnit;
-    const asmMatSell = asmMatCost * (1 + (a.material_markup || 0) / 100);
+    const asmMatGp = asmMatUnits * asmMatGpUnit;
+    const asmMatSell = asmMatUnits * asmMatSellUnit;
 
-    const asmLabSell = a.has_labor
-      ? unitsNeeded * (a.labor_cost || 0) * (1 + (a.labor_markup || 0) / 100)
-      : 0;
+    const asmLabCostUnit = a.has_labor ? (a.labor_cost || 0) : 0;
+    const asmLabGpUnit = asmLabCostUnit * ((a.labor_markup || 0) / 100);
+    const asmLabSellUnit = asmLabCostUnit + asmLabGpUnit;
+    const asmLabCost = unitsNeeded * asmLabCostUnit;
+    const asmLabGp = unitsNeeded * asmLabGpUnit;
+    const asmLabSell = unitsNeeded * asmLabSellUnit;
+
     const asmTotalSell = asmMatSell + asmLabSell;
-    const asmTotalCost = asmMatCost + (a.has_labor ? unitsNeeded * (a.labor_cost || 0) : 0);
+    const asmTotalCost = asmMatCost + asmLabCost;
+    const asmTotalGp = asmMatGp + asmLabGp;
 
     asmSell += asmTotalSell;
     asmCost += asmTotalCost;
+    asmGp += asmTotalGp;
 
     return {
       ...a,
@@ -55,22 +73,26 @@ function computeProductTotals(product, assemblies) {
       asm_labor_sell: round2(asmLabSell),
       asm_total_sell: round2(asmTotalSell),
       asm_total_cost: round2(asmTotalCost),
+      asm_gp_amount: round2(asmTotalGp),
     };
   });
 
   const totalSell = matSell + labSell + asmSell;
   const totalCost = matCost + labCost + asmCost;
-  const gpAmount = totalSell - totalCost;
+  const gpAmount = matGp + labGp + asmGp;
   const gpPct = totalSell > 0 ? (gpAmount / totalSell) * 100 : 0;
 
   return {
     material_qty: round2(matQty),
     material_sell: round2(matSell),
     material_cost_true: round2(matCost),
+    material_gp_amount: round2(matGp),
     labor_sell: round2(labSell),
     labor_cost_true: round2(labCost),
+    labor_gp_amount: round2(labGp),
     assembly_sell: round2(asmSell),
     assembly_cost: round2(asmCost),
+    assembly_gp_amount: round2(asmGp),
     total_sell: round2(totalSell),
     total_cost: round2(totalCost),
     gp_amount: round2(gpAmount),

@@ -2049,12 +2049,14 @@ function renderProductCard(p) {
             <div class="detail-item"><label>Mat. Markup</label><div class="detail-val">${p.material_markup}%</div></div>
             <div class="detail-item"><label>Tax Rate</label><div class="detail-val">${p.tax_rate}%</div></div>
             <div class="detail-item"><label>Vendor Fee</label><div class="detail-val">${p.vendor_fee}%</div></div>
+            <div class="detail-item"><label>Material Qty</label><div class="detail-val">${p.material_qty}</div></div>
+            <div class="detail-item"><label>Mat. GP</label><div class="detail-val">${fmt(p.material_gp_amount || 0)}</div></div>
             <div class="detail-item"><label>Labor Cost/Unit</label><div class="detail-val">${fmt(p.labor_cost)}</div></div>
             <div class="detail-item"><label>Labor Markup</label><div class="detail-val">${p.labor_markup}%</div></div>
-            <div class="detail-item"><label>Mat. Sell</label><div class="detail-val">${fmt(p.material_sell)}</div></div>
-            <div class="detail-item"><label>Labor Sell</label><div class="detail-val">${fmt(p.labor_sell)}</div></div>
-            <div class="detail-item"><label>Asm. Sell</label><div class="detail-val">${fmt(p.assembly_sell)}</div></div>
+            <div class="detail-item"><label>Labor GP</label><div class="detail-val">${fmt(p.labor_gp_amount || 0)}</div></div>
+            <div class="detail-item"><label>Asm. GP</label><div class="detail-val">${fmt(p.assembly_gp_amount || 0)}</div></div>
             <div class="detail-item"><label>Total Cost</label><div class="detail-val">${fmt(p.total_cost)}</div></div>
+            <div class="detail-item"><label>Total Sell</label><div class="detail-val">${fmt(p.total_sell)}</div></div>
             <div class="detail-item"><label>GP $</label><div class="detail-val">${fmt(p.gp_amount)}</div></div>
           </div>
         </div>
