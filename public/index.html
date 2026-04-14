@@ -858,7 +858,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
     <a href="#" onclick="showView('proposals')" style="display:flex;align-items:center;text-decoration:none"><img src="/logo.png" alt="Focus Flooring" style="height:36px;width:auto;object-fit:contain"></a>
     <div class="nav-tabs-desktop">
       <button class="nav-btn active" id="nav-proposals" onclick="showView('proposals')">Proposals</button>
-      <button class="nav-btn" id="nav-catalog" onclick="showView('catalog')">Catalog</button>
+      <button class="nav-btn" id="nav-catalog" onclick="showView('catalog')">Assembly Products</button>
       <button class="nav-btn" id="nav-vendors" onclick="showView('vendors')">Vendors</button>
       <button class="nav-btn" id="nav-product-catalog" onclick="showView('product-catalog')">Product Catalog</button>
       <button class="nav-btn" id="nav-trade-partners" onclick="showView('trade-partners')">Trade Partners</button>
@@ -869,7 +869,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
   </div>
   <div class="mobile-menu" id="mobile-menu">
     <button class="mobile-nav-btn" onclick="showView('proposals');closeMobileMenu()">Proposals</button>
-    <button class="mobile-nav-btn" onclick="showView('catalog');closeMobileMenu()">Catalog</button>
+    <button class="mobile-nav-btn" onclick="showView('catalog');closeMobileMenu()">Assembly Products</button>
     <button class="mobile-nav-btn" onclick="showView('vendors');closeMobileMenu()">Vendors</button>
     <button class="mobile-nav-btn" onclick="showView('product-catalog');closeMobileMenu()">Product Catalog</button>
     <button class="mobile-nav-btn" onclick="showView('trade-partners');closeMobileMenu()">Trade Partners</button>
@@ -1094,7 +1094,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
   <!-- ════════════════════════ CATALOG VIEW ════════════════════════ -->
   <div class="view" id="view-catalog">
     <div class="section-header">
-      <h1 class="section-title">Assembly Catalog</h1>
+      <h1 class="section-title">Assembly Products</h1>
       <button class="btn btn-primary" onclick="openCatalogModal()">+ Add Item</button>
     </div>
     <div class="card" style="padding:0;">
@@ -1332,7 +1332,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
     <form id="form-assembly" onsubmit="submitAssemblyForm(event)">
       <div class="form-row">
         <div class="form-group full">
-          <label>From Catalog (optional)</label>
+          <label>From Assembly Products (optional)</label>
           <select id="asm-catalog-select" onchange="prefillFromCatalog()">
             <option value="">— Manual entry —</option>
           </select>
@@ -1430,7 +1430,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
 <div class="modal-overlay" id="modal-catalog">
   <div class="modal">
     <button class="modal-close" onclick="closeModal('modal-catalog')">&times;</button>
-    <div class="modal-title" id="modal-catalog-title">Add Catalog Item</div>
+    <div class="modal-title" id="modal-catalog-title">Add Assembly Product</div>
     <form id="form-catalog" onsubmit="submitCatalogForm(event)">
       <div class="form-row">
         <div class="form-group wide"><label>Name *</label><input type="text" id="cat-name" required /></div>
@@ -2625,7 +2625,7 @@ function openCatalogModal(id) {
     api('GET', '/api/catalog').then(items => {
       const c = items.find(x => x.id === id);
       if (!c) return;
-      document.getElementById('modal-catalog-title').textContent = 'Edit Catalog Item';
+      document.getElementById('modal-catalog-title').textContent = 'Edit Assembly Product';
       setVal('cat-name', c.name); setVal('cat-desc', c.description);
       setSelect('cat-unit', c.unit); setVal('cat-spread', c.spread_rate || '');
       setVal('cat-mat-cost', c.material_cost); setVal('cat-tax', c.tax_rate || ''); setVal('cat-waste', c.waste_pct || ''); setVal('cat-lab-cost', c.labor_cost);
@@ -2634,7 +2634,7 @@ function openCatalogModal(id) {
       openModal('modal-catalog');
     });
   } else {
-    document.getElementById('modal-catalog-title').textContent = 'Add Catalog Item';
+    document.getElementById('modal-catalog-title').textContent = 'Add Assembly Product';
     setVal('cat-name', ''); setVal('cat-desc', ''); setSelect('cat-unit', 'each');
     setVal('cat-spread', ''); setVal('cat-mat-cost', ''); setVal('cat-tax', ''); setVal('cat-waste', ''); setVal('cat-lab-cost', '');
     setChecked('cat-has-labor', false);
