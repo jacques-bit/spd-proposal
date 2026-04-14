@@ -14,10 +14,12 @@ function computeProductTotals(product, assemblies) {
   const matQty = pkg > 0 ? Math.ceil(matQtyRaw / pkg) * pkg : matQtyRaw;
 
   // Product material: tax + vendor fee are cost only, never GP
-  const matCostUnitTrue = (product.material_cost || 0)
+  // GP markup applies only to base cost/unit, not true landed cost
+  const matBaseCostUnit = product.material_cost || 0;
+  const matCostUnitTrue = matBaseCostUnit
     * (1 + (product.tax_rate || 0) / 100)
     * (1 + (product.vendor_fee || 0) / 100);
-  const matGpUnit = matCostUnitTrue * ((product.material_markup || 0) / 100);
+  const matGpUnit = matBaseCostUnit * ((product.material_markup || 0) / 100);
   const matSellUnit = matCostUnitTrue + matGpUnit;
   const matCost = matQty * matCostUnitTrue;
   const matGp = matQty * matGpUnit;
@@ -43,9 +45,10 @@ function computeProductTotals(product, assemblies) {
     const asmWaste = (a.waste_pct || 0) / 100;
     const asmMatUnits = a.waste_pct > 0 ? Math.ceil(unitsNeeded * (1 + asmWaste)) : unitsNeeded;
 
-    // Assembly material: tax is cost only
-    const asmMatCostUnit = (a.material_cost || 0) * (1 + (a.tax_rate || 0) / 100);
-    const asmMatGpUnit = asmMatCostUnit * ((a.material_markup || 0) / 100);
+    // Assembly material: tax is cost only, GP applies only to base cost/unit
+    const asmMatBaseCostUnit = a.material_cost || 0;
+    const asmMatCostUnit = asmMatBaseCostUnit * (1 + (a.tax_rate || 0) / 100);
+    const asmMatGpUnit = asmMatBaseCostUnit * ((a.material_markup || 0) / 100);
     const asmMatSellUnit = asmMatCostUnit + asmMatGpUnit;
     const asmMatCost = asmMatUnits * asmMatCostUnit;
     const asmMatGp = asmMatUnits * asmMatGpUnit;
