@@ -229,11 +229,11 @@ router.get('/api/catalog', async (req, res) => {
 
 router.post('/api/catalog', async (req, res) => {
   try {
-    const { name, description, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
+    const { name, description, category, manufacturer, model, function: item_function, size, color, package_rate, notes, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
     if (!name || !unit) return res.status(400).json({ error: 'name and unit required' });
     const result = await db.run(
-      `INSERT INTO assembly_catalog (name, description, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, description || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null]
+      `INSERT INTO assembly_catalog (name, description, category, manufacturer, model, function, size, color, package_rate, notes, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description || null, category || null, manufacturer || null, model || null, item_function || null, size || null, color || null, package_rate || null, notes || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null]
     );
     res.json(await db.get('SELECT * FROM assembly_catalog WHERE id = ?', [result.lastInsertRowid]));
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -241,10 +241,10 @@ router.post('/api/catalog', async (req, res) => {
 
 router.put('/api/catalog/:id', async (req, res) => {
   try {
-    const { name, description, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
+    const { name, description, category, manufacturer, model, function: item_function, size, color, package_rate, notes, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
     await db.run(
-      `UPDATE assembly_catalog SET name=?, description=?, unit=?, spread_rate=?, material_cost=?, tax_rate=?, waste_pct=?, labor_cost=?, has_labor=?, vendor_id=? WHERE id=?`,
-      [name, description || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null, req.params.id]
+      `UPDATE assembly_catalog SET name=?, description=?, category=?, manufacturer=?, model=?, function=?, size=?, color=?, package_rate=?, notes=?, unit=?, spread_rate=?, material_cost=?, tax_rate=?, waste_pct=?, labor_cost=?, has_labor=?, vendor_id=? WHERE id=?`,
+      [name, description || null, category || null, manufacturer || null, model || null, item_function || null, size || null, color || null, package_rate || null, notes || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null, req.params.id]
     );
     res.json(await db.get('SELECT * FROM assembly_catalog WHERE id = ?', [req.params.id]));
   } catch (e) { res.status(500).json({ error: e.message }); }

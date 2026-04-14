@@ -112,6 +112,14 @@ async function init() {
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
+        category TEXT,
+        manufacturer TEXT,
+        model TEXT,
+        function TEXT,
+        size TEXT,
+        color TEXT,
+        package_rate REAL,
+        notes TEXT,
         unit TEXT NOT NULL DEFAULT 'each',
         spread_rate REAL,
         material_cost REAL DEFAULT 0,
@@ -283,6 +291,14 @@ async function init() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         description TEXT,
+        category TEXT,
+        manufacturer TEXT,
+        model TEXT,
+        function TEXT,
+        size TEXT,
+        color TEXT,
+        package_rate REAL,
+        notes TEXT,
         unit TEXT NOT NULL DEFAULT 'each',
         spread_rate REAL,
         material_cost REAL DEFAULT 0,
@@ -436,6 +452,14 @@ async function init() {
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN tax_rate REAL DEFAULT 0`);
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN waste_pct REAL DEFAULT 0`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN category TEXT`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN manufacturer TEXT`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN model TEXT`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN function TEXT`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN size TEXT`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN color TEXT`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN package_rate REAL`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN notes TEXT`);
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN lead_time_days INTEGER DEFAULT 0`);
     safeAlter(`ALTER TABLE proposal_products ADD COLUMN waste_pct REAL DEFAULT 0`);

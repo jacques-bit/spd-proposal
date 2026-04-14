@@ -1485,12 +1485,26 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
           <label>Unit</label>
           <select id="cat-unit">
             <option>each</option><option>bag</option><option>gallon</option>
-            <option>LF</option><option>SF</option><option>SY</option>
+            <option>LF</option><option>SF</option><option>SY</option><option>EA</option>
           </select>
         </div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label>Category</label><input type="text" id="cat-category" /></div>
+        <div class="form-group"><label>Manufacturer</label><input type="text" id="cat-manufacturer" /></div>
+        <div class="form-group"><label>Model</label><input type="text" id="cat-model" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Function</label><input type="text" id="cat-function" /></div>
+        <div class="form-group"><label>Size</label><input type="text" id="cat-size" /></div>
+        <div class="form-group"><label>Color</label><input type="text" id="cat-color" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Package Rate</label><input type="number" id="cat-package-rate" step="0.01" min="0" /></div>
         <div class="form-group full"><label>Description</label><input type="text" id="cat-desc" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full"><label>Notes</label><input type="text" id="cat-notes" /></div>
         <div class="form-group full">
           <label>Vendor</label>
           <select id="cat-vendor-id">
@@ -2670,9 +2684,9 @@ async function loadCatalog() {
   }
   tbody.innerHTML = items.map(c => `
     <tr>
-      <td><strong>${esc(c.name)}</strong>${c.description ? `<br><span style="font-size:12px;color:var(--muted);">${esc(c.description)}</span>` : ''}</td>
+      <td><strong>${esc(c.name)}</strong>${c.description ? `<br><span style="font-size:12px;color:var(--muted);">${esc(c.description)}</span>` : ''}${c.manufacturer || c.model || c.color ? `<br><span style="font-size:12px;color:var(--muted);">${[c.manufacturer, c.model, c.color].filter(Boolean).map(esc).join(' • ')}</span>` : ''}</td>
       <td>${esc(c.unit)}</td>
-      <td>${c.spread_rate ? c.spread_rate + ' SF/unit' : '—'}</td>
+      <td>${c.spread_rate ? c.spread_rate + ' SF/unit' : (c.package_rate ? c.package_rate : '—')}</td>
       <td>${fmt(c.material_cost)}</td>
       <td>${c.has_labor ? fmt(c.labor_cost) : '—'}</td>
       <td>${c.has_labor ? '✓' : ''}</td>
@@ -2692,6 +2706,9 @@ function openCatalogModal(id) {
       if (!c) return;
       document.getElementById('modal-catalog-title').textContent = 'Edit Assembly Product';
       setVal('cat-name', c.name); setVal('cat-desc', c.description);
+      setVal('cat-category', c.category || ''); setVal('cat-manufacturer', c.manufacturer || ''); setVal('cat-model', c.model || '');
+      setVal('cat-function', c.function || ''); setVal('cat-size', c.size || ''); setVal('cat-color', c.color || '');
+      setVal('cat-package-rate', c.package_rate || ''); setVal('cat-notes', c.notes || '');
       setSelect('cat-unit', c.unit); setVal('cat-spread', c.spread_rate || '');
       setVal('cat-mat-cost', c.material_cost); setVal('cat-tax', c.tax_rate || ''); setVal('cat-waste', c.waste_pct || ''); setVal('cat-lab-cost', c.labor_cost);
       setChecked('cat-has-labor', !!c.has_labor);
@@ -2701,6 +2718,9 @@ function openCatalogModal(id) {
   } else {
     document.getElementById('modal-catalog-title').textContent = 'Add Assembly Product';
     setVal('cat-name', ''); setVal('cat-desc', ''); setSelect('cat-unit', 'each');
+    setVal('cat-category', ''); setVal('cat-manufacturer', ''); setVal('cat-model', '');
+    setVal('cat-function', ''); setVal('cat-size', ''); setVal('cat-color', '');
+    setVal('cat-package-rate', ''); setVal('cat-notes', '');
     setVal('cat-spread', ''); setVal('cat-mat-cost', ''); setVal('cat-tax', ''); setVal('cat-waste', ''); setVal('cat-lab-cost', '');
     setChecked('cat-has-labor', false);
     populateVendorDropdown('cat-vendor-id', null);
@@ -2712,6 +2732,9 @@ async function submitCatalogForm(e) {
   e.preventDefault();
   const body = {
     name: getVal('cat-name'), description: getVal('cat-desc'), unit: getVal('cat-unit'),
+    category: getVal('cat-category'), manufacturer: getVal('cat-manufacturer'), model: getVal('cat-model'),
+    function: getVal('cat-function'), size: getVal('cat-size'), color: getVal('cat-color'),
+    package_rate: getFloat('cat-package-rate') || null, notes: getVal('cat-notes'),
     spread_rate: getFloat('cat-spread') || null, material_cost: getFloat('cat-mat-cost'),
     tax_rate: getFloat('cat-tax'), waste_pct: getFloat('cat-waste'),
     labor_cost: getFloat('cat-lab-cost'), has_labor: getChecked('cat-has-labor') ? 1 : 0,
