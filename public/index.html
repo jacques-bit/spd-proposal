@@ -2718,7 +2718,7 @@ function openCatalogModal(id) {
       setSelect('cat-category', c.category || ''); setVal('cat-manufacturer', c.manufacturer || ''); setVal('cat-model', c.model || '');
       setVal('cat-size', c.size || ''); setVal('cat-color', c.color || '');
       updateCatalogDescription();
-      setVal('cat-package-rate', c.package_rate || ''); setVal('cat-notes', c.notes || '');
+      setVal('cat-notes', c.notes || '');
       setSelect('cat-unit', c.unit); setVal('cat-spread', c.spread_rate || '');
       setVal('cat-mat-cost', c.material_cost); setVal('cat-tax', c.tax_rate || ''); setVal('cat-waste', c.waste_pct || ''); setVal('cat-lab-cost', c.labor_cost);
       setChecked('cat-has-labor', !!c.has_labor);
@@ -2731,7 +2731,7 @@ function openCatalogModal(id) {
     setSelect('cat-category', ''); setVal('cat-manufacturer', ''); setVal('cat-model', '');
     setVal('cat-size', ''); setVal('cat-color', '');
     updateCatalogDescription();
-    setVal('cat-package-rate', ''); setVal('cat-notes', '');
+    setVal('cat-notes', '');
     setVal('cat-spread', ''); setVal('cat-mat-cost', ''); setVal('cat-tax', ''); setVal('cat-waste', ''); setVal('cat-lab-cost', '');
     setChecked('cat-has-labor', false);
     populateVendorDropdown('cat-vendor-id', null);
@@ -2752,7 +2752,7 @@ async function submitCatalogForm(e) {
     name: derivedName, description: getVal('cat-desc'), unit: getVal('cat-unit'),
     category: getVal('cat-category'), manufacturer: getVal('cat-manufacturer'), model: getVal('cat-model'),
     function: '', size: getVal('cat-size'), color: getVal('cat-color'),
-    package_rate: getFloat('cat-package-rate') || null, notes: getVal('cat-notes'),
+    package_rate: null, notes: getVal('cat-notes'),
     spread_rate: getFloat('cat-spread') || null, material_cost: getFloat('cat-mat-cost'),
     tax_rate: getFloat('cat-tax'), waste_pct: getFloat('cat-waste'),
     labor_cost: getFloat('cat-lab-cost'), has_labor: getChecked('cat-has-labor') ? 1 : 0,
