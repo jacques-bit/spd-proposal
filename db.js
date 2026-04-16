@@ -266,6 +266,29 @@ async function init() {
       );
     `);
 
+    const safePgAlter = async (sql) => { try { await _pgPool.query(sql); } catch(e) { /* column likely exists */ } };
+    await safePgAlter(`ALTER TABLE proposals ADD COLUMN status TEXT DEFAULT 'draft'`);
+    await safePgAlter(`ALTER TABLE proposals ADD COLUMN notes TEXT`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN tax_rate REAL DEFAULT 0`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN waste_pct REAL DEFAULT 0`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN category TEXT`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN manufacturer TEXT`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN model TEXT`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN function TEXT`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN size TEXT`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN color TEXT`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN package_rate REAL`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN notes TEXT`);
+    await safePgAlter(`ALTER TABLE proposal_products ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
+    await safePgAlter(`ALTER TABLE proposal_products ADD COLUMN lead_time_days INTEGER DEFAULT 0`);
+    await safePgAlter(`ALTER TABLE proposal_products ADD COLUMN waste_pct REAL DEFAULT 0`);
+    await safePgAlter(`ALTER TABLE proposal_products ADD COLUMN package_qty REAL DEFAULT 0`);
+    await safePgAlter(`ALTER TABLE proposal_products ADD COLUMN scope_type TEXT`);
+    await safePgAlter(`ALTER TABLE product_assemblies ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
+    await safePgAlter(`ALTER TABLE product_assemblies ADD COLUMN tax_rate REAL DEFAULT 0`);
+    await safePgAlter(`ALTER TABLE product_assemblies ADD COLUMN waste_pct REAL DEFAULT 0`);
+
   } else {
     let Database;
     try { Database = require('better-sqlite3'); } catch(e) {
