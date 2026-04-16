@@ -1142,7 +1142,10 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
   <div class="view" id="view-catalog">
     <div class="section-header">
       <h1 class="section-title">Assembly Products</h1>
-      <button class="btn btn-primary" onclick="openCatalogModal()">+ Add Item</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="importIrisCatalog()">Import from IRIS</button>
+        <button class="btn btn-primary" onclick="openCatalogModal()">+ Add Item</button>
+      </div>
     </div>
     <div class="card" style="padding:0;">
       <div class="table-wrap">
@@ -1492,16 +1495,9 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
       <div class="form-row">
         <div class="form-group"><label>Scope Type</label><select id="cat-category">
           <option value="">— Select Scope —</option>
-          <option value="9.0 - Selective Demo">9.0 - Selective Demo</option>
-          <option value="9.1 - Floor Tile">9.1 - Floor Tile</option>
-          <option value="9.2 - Wall Covering">9.2 - Wall Covering</option>
-          <option value="9.3 - Resilient">9.3 - Resilient</option>
-          <option value="9.4 - Carpet">9.4 - Carpet</option>
-          <option value="9.5 - Base">9.5 - Base</option>
-          <option value="9.6 - Resinous">9.6 - Resinous</option>
-          <option value="9.7 - Rubber">9.7 - Rubber</option>
-          <option value="9.8 - Additional Materials">9.8 - Additional Materials</option>
-          <option value="9.9 - Thresholds/Transitions">9.9 - Thresholds/Transitions</option>
+          <option value="10.1 - Finish">10.1 - Finish</option>
+          <option value="10.2 - Prep/Setting Materials">10.2 - Prep/Setting Materials</option>
+          <option value="10.3 - Underlayment/Waterproofing/Moisture">10.3 - Underlayment/Waterproofing/Moisture</option>
         </select></div>
         <div class="form-group"><label>Manufacturer</label><input type="text" id="cat-manufacturer" /></div>
         <div class="form-group"><label>Model</label><input type="text" id="cat-model" /></div>
@@ -2769,6 +2765,17 @@ async function deleteCatalogItem(id) {
   if (!confirm('Delete this catalog item?')) return;
   await api('DELETE', `/api/catalog/${id}`);
   loadCatalog();
+}
+
+async function importIrisCatalog() {
+  if (!confirm('Import IRIS Product Catalog into Assembly Products? Existing matching items will be updated.')) return;
+  try {
+    const result = await api('POST', '/api/catalog/import-iris', {});
+    alert(`IRIS import complete. Created: ${result.created}, Updated: ${result.updated}, Source rows: ${result.total}`);
+    loadCatalog();
+  } catch (e) {
+    alert('IRIS import failed: ' + e.message);
+  }
 }
 
 // ══════════════════════════════════════════════════════════
