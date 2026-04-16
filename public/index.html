@@ -1497,7 +1497,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
         <div class="form-group"><label>Size</label><input type="text" id="cat-size" oninput="updateCatalogDescription()" /></div>
       </div>
       <div class="form-row">
-        <div class="form-group full"><label>Description</label><input type="text" id="cat-desc" readonly /></div>
+        <div class="form-group full"><label>Description</label><input type="text" id="cat-desc" /></div>
         <div class="form-group"><label>Vendor</label>
           <select id="cat-vendor-id">
             <option value="">— None —</option>
@@ -2707,35 +2707,51 @@ async function loadCatalog() {
   `}).join('');
 }
 
-function openCatalogModal(id) {
+async function openCatalogModal(id) {
   editingCatalogId = id || null;
-  if (id) {
-    api('GET', '/api/catalog').then(items => {
+  try {
+    if (id) {
+      const items = await api('GET', '/api/catalog');
       const c = items.find(x => x.id === id);
       if (!c) return;
       document.getElementById('modal-catalog-title').textContent = 'Edit Assembly Product';
-      setVal('cat-desc', c.description);
-      setSelect('cat-category', c.category || ''); setVal('cat-manufacturer', c.manufacturer || ''); setVal('cat-model', c.model || '');
-      setVal('cat-size', c.size || ''); setVal('cat-color', c.color || '');
+      setSelect('cat-category', c.category || '');
+      setVal('cat-manufacturer', c.manufacturer || '');
+      setVal('cat-model', c.model || '');
+      setVal('cat-size', c.size || '');
+      setVal('cat-color', c.color || '');
       updateCatalogDescription();
+      if (c.description) setVal('cat-desc', c.description);
       setVal('cat-notes', c.notes || '');
-      setSelect('cat-unit', c.unit); setVal('cat-spread', c.spread_rate || '');
-      setVal('cat-mat-cost', c.material_cost); setVal('cat-tax', c.tax_rate || ''); setVal('cat-waste', c.waste_pct || ''); setVal('cat-lab-cost', c.labor_cost);
+      setSelect('cat-unit', c.unit || 'each');
+      setVal('cat-spread', c.spread_rate || '');
+      setVal('cat-mat-cost', c.material_cost || '');
+      setVal('cat-tax', c.tax_rate || '');
+      setVal('cat-waste', c.waste_pct || '');
+      setVal('cat-lab-cost', c.labor_cost || '');
       setChecked('cat-has-labor', !!c.has_labor);
       populateVendorDropdown('cat-vendor-id', c.vendor_id || null);
-      openModal('modal-catalog');
-    });
-  } else {
-    document.getElementById('modal-catalog-title').textContent = 'Add Assembly Product';
-    setVal('cat-desc', ''); setSelect('cat-unit', 'each');
-    setSelect('cat-category', ''); setVal('cat-manufacturer', ''); setVal('cat-model', '');
-    setVal('cat-size', ''); setVal('cat-color', '');
-    updateCatalogDescription();
-    setVal('cat-notes', '');
-    setVal('cat-spread', ''); setVal('cat-mat-cost', ''); setVal('cat-tax', ''); setVal('cat-waste', ''); setVal('cat-lab-cost', '');
-    setChecked('cat-has-labor', false);
-    populateVendorDropdown('cat-vendor-id', null);
+    } else {
+      document.getElementById('modal-catalog-title').textContent = 'Add Assembly Product';
+      setSelect('cat-category', '');
+      setVal('cat-manufacturer', '');
+      setVal('cat-model', '');
+      setVal('cat-size', '');
+      setVal('cat-color', '');
+      setVal('cat-desc', '');
+      setVal('cat-notes', '');
+      setSelect('cat-unit', 'each');
+      setVal('cat-spread', '');
+      setVal('cat-mat-cost', '');
+      setVal('cat-tax', '');
+      setVal('cat-waste', '');
+      setVal('cat-lab-cost', '');
+      setChecked('cat-has-labor', false);
+      populateVendorDropdown('cat-vendor-id', null);
+    }
     openModal('modal-catalog');
+  } catch (err) {
+    alert('Could not open Assembly Product editor: ' + (err.message || err));
   }
 }
 
