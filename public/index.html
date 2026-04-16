@@ -2268,7 +2268,10 @@ function openAddAssemblyModal(productId) {
   addingAssemblyForProductId = productId;
   const sel = document.getElementById('asm-catalog-select');
   sel.innerHTML = '<option value="">— Manual entry —</option>' +
-    catalogItems.map(c => `<option value="${c.id}">${esc(c.name)} (${c.unit})</option>`).join('');
+    catalogItems.map(c => {
+      const label = [c.model, c.color, c.size].filter(Boolean).join(' - ') || c.description || c.name;
+      return `<option value="${c.id}">${esc(label)} (${esc(c.unit)})</option>`;
+    }).join('');
   setVal('asm-name', ''); setSelect('asm-unit', 'each');
   setVal('asm-spread', ''); setVal('asm-units', '');
   setVal('asm-mat-cost', ''); setVal('asm-mat-markup', '');
