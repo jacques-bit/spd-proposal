@@ -1483,7 +1483,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
     <div class="modal-title" id="modal-catalog-title">Add Assembly Product</div>
     <form id="form-catalog" onsubmit="submitCatalogForm(event)">
       <div class="form-row">
-        <div class="form-group wide"><label>Name *</label><input type="text" id="cat-name" required /></div>
+        <div class="form-group wide"><label>Manufacturer</label><input type="text" id="cat-manufacturer" /></div>
         <div class="form-group"><label>Scope Type</label><select id="cat-category">
           <option value="">— Select Scope —</option>
           <option value="10.1 - Finish">10.1 - Finish</option>
@@ -1492,13 +1492,12 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
         </select></div>
       </div>
       <div class="form-row">
-        <div class="form-group full"><label>Description</label><input type="text" id="cat-desc" /></div>
-        <div class="form-group"><label>Size</label><input type="text" id="cat-size" /></div>
-        <div class="form-group"><label>Color</label><input type="text" id="cat-color" /></div>
+        <div class="form-group"><label>Model</label><input type="text" id="cat-model" oninput="updateCatalogDescription()" /></div>
+        <div class="form-group"><label>Color</label><input type="text" id="cat-color" oninput="updateCatalogDescription()" /></div>
+        <div class="form-group"><label>Size</label><input type="text" id="cat-size" oninput="updateCatalogDescription()" /></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Manufacturer</label><input type="text" id="cat-manufacturer" /></div>
-        <div class="form-group"><label>Model</label><input type="text" id="cat-model" /></div>
+        <div class="form-group full"><label>Description</label><input type="text" id="cat-desc" readonly /></div>
         <div class="form-group"><label>Vendor</label>
           <select id="cat-vendor-id">
             <option value="">— None —</option>
@@ -2711,9 +2710,10 @@ function openCatalogModal(id) {
       const c = items.find(x => x.id === id);
       if (!c) return;
       document.getElementById('modal-catalog-title').textContent = 'Edit Assembly Product';
-      setVal('cat-name', c.name); setVal('cat-desc', c.description);
+      setVal('cat-desc', c.description);
       setSelect('cat-category', c.category || ''); setVal('cat-manufacturer', c.manufacturer || ''); setVal('cat-model', c.model || '');
       setVal('cat-size', c.size || ''); setVal('cat-color', c.color || '');
+      updateCatalogDescription();
       setVal('cat-package-rate', c.package_rate || ''); setVal('cat-notes', c.notes || '');
       setSelect('cat-unit', c.unit); setVal('cat-spread', c.spread_rate || '');
       setVal('cat-mat-cost', c.material_cost); setVal('cat-tax', c.tax_rate || ''); setVal('cat-waste', c.waste_pct || ''); setVal('cat-lab-cost', c.labor_cost);
@@ -2723,9 +2723,10 @@ function openCatalogModal(id) {
     });
   } else {
     document.getElementById('modal-catalog-title').textContent = 'Add Assembly Product';
-    setVal('cat-name', ''); setVal('cat-desc', ''); setSelect('cat-unit', 'each');
+    setVal('cat-desc', ''); setSelect('cat-unit', 'each');
     setSelect('cat-category', ''); setVal('cat-manufacturer', ''); setVal('cat-model', '');
     setVal('cat-size', ''); setVal('cat-color', '');
+    updateCatalogDescription();
     setVal('cat-package-rate', ''); setVal('cat-notes', '');
     setVal('cat-spread', ''); setVal('cat-mat-cost', ''); setVal('cat-tax', ''); setVal('cat-waste', ''); setVal('cat-lab-cost', '');
     setChecked('cat-has-labor', false);
@@ -2734,10 +2735,17 @@ function openCatalogModal(id) {
   }
 }
 
+function updateCatalogDescription() {
+  const parts = [getVal('cat-model'), getVal('cat-color'), getVal('cat-size')].map(v => (v || '').trim()).filter(Boolean);
+  const desc = parts.join(' - ');
+  setVal('cat-desc', desc);
+}
+
 async function submitCatalogForm(e) {
   e.preventDefault();
+  const derivedName = (getVal('cat-manufacturer') || '').trim() || (getVal('cat-model') || '').trim() || 'Assembly Product';
   const body = {
-    name: getVal('cat-name'), description: getVal('cat-desc'), unit: getVal('cat-unit'),
+    name: derivedName, description: getVal('cat-desc'), unit: getVal('cat-unit'),
     category: getVal('cat-category'), manufacturer: getVal('cat-manufacturer'), model: getVal('cat-model'),
     function: '', size: getVal('cat-size'), color: getVal('cat-color'),
     package_rate: getFloat('cat-package-rate') || null, notes: getVal('cat-notes'),
