@@ -1484,51 +1484,49 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
     <form id="form-catalog" onsubmit="submitCatalogForm(event)">
       <div class="form-row">
         <div class="form-group wide"><label>Name *</label><input type="text" id="cat-name" required /></div>
-        <div class="form-group">
-          <label>Unit</label>
-          <select id="cat-unit">
-            <option>each</option><option>bag</option><option>gallon</option>
-            <option>LF</option><option>SF</option><option>SY</option><option>EA</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
         <div class="form-group"><label>Scope Type</label><select id="cat-category">
           <option value="">— Select Scope —</option>
           <option value="10.1 - Finish">10.1 - Finish</option>
           <option value="10.2 - Prep/Setting Materials">10.2 - Prep/Setting Materials</option>
           <option value="10.3 - Underlayment/Waterproofing/Moisture">10.3 - Underlayment/Waterproofing/Moisture</option>
         </select></div>
-        <div class="form-group"><label>Manufacturer</label><input type="text" id="cat-manufacturer" /></div>
-        <div class="form-group"><label>Model</label><input type="text" id="cat-model" /></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Function</label><input type="text" id="cat-function" /></div>
+        <div class="form-group full"><label>Description</label><input type="text" id="cat-desc" /></div>
         <div class="form-group"><label>Size</label><input type="text" id="cat-size" /></div>
         <div class="form-group"><label>Color</label><input type="text" id="cat-color" /></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>Package Rate</label><input type="number" id="cat-package-rate" step="0.01" min="0" /></div>
-        <div class="form-group full"><label>Description</label><input type="text" id="cat-desc" /></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group full"><label>Notes</label><input type="text" id="cat-notes" /></div>
-        <div class="form-group full">
-          <label>Vendor</label>
+        <div class="form-group"><label>Manufacturer</label><input type="text" id="cat-manufacturer" /></div>
+        <div class="form-group"><label>Model</label><input type="text" id="cat-model" /></div>
+        <div class="form-group"><label>Vendor</label>
           <select id="cat-vendor-id">
             <option value="">— None —</option>
           </select>
         </div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label>Unit</label>
+          <select id="cat-unit">
+            <option>each</option><option>bag</option><option>gallon</option>
+            <option>LF</option><option>SF</option><option>SY</option><option>EA</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Package Rate</label><input type="number" id="cat-package-rate" step="0.01" min="0" /></div>
         <div class="form-group"><label>Spread Rate (SF/unit)</label><input type="number" id="cat-spread" step="0.01" min="0" /></div>
-        <div class="form-group"><label>Material Cost ($)</label><input type="number" id="cat-mat-cost" step="0.01" min="0" /></div>
-        <div class="form-group"><label>Tax Rate (%)</label><input type="number" id="cat-tax" step="0.01" min="0" /></div>
       </div>
       <div class="form-row">
+        <div class="form-group"><label>Material Cost ($)</label><input type="number" id="cat-mat-cost" step="0.01" min="0" /></div>
+        <div class="form-group"><label>Tax Rate (%)</label><input type="number" id="cat-tax" step="0.01" min="0" /></div>
         <div class="form-group"><label>Waste (%)</label><input type="number" id="cat-waste" step="0.01" min="0" /></div>
+      </div>
+      <div class="form-row">
         <div class="form-group"><label>Labor Cost ($)</label><input type="number" id="cat-lab-cost" step="0.01" min="0" /></div>
         <div class="form-group"></div>
+        <div class="form-group"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full"><label>Notes</label><input type="text" id="cat-notes" /></div>
       </div>
       <div class="form-row">
         <div class="form-group">
