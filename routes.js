@@ -2,6 +2,18 @@ const express = require('express');
 const router = express.Router();
 const { db, getDefaultWoTerms } = require('./db');
 
+async function fetchJson(url, headers = {}) {
+  const resp = await fetch(url, { headers });
+  const text = await resp.text();
+  try { return JSON.parse(text); }
+  catch { throw new Error(`Non-JSON response from ${url}: ${text.slice(0, 200)}`); }
+}
+
+function mapQtoUnit(qto) {
+  const map = { 4: 'EA', 5: 'bag', 6: 'LF' };
+  return map[qto] || 'each';
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function computeProductTotals(product, assemblies) {
@@ -229,11 +241,11 @@ router.get('/api/catalog', async (req, res) => {
 
 router.post('/api/catalog', async (req, res) => {
   try {
-    const { name, description, category, manufacturer, model, function: item_function, size, color, package_rate, notes, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
+    const { name, description, category, manufacturer, model, function: item_function, size, color, package_rate, notes, unit, spread_rate, material_cost, material_markup, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
     if (!name || !unit) return res.status(400).json({ error: 'name and unit required' });
     const result = await db.run(
-      `INSERT INTO assembly_catalog (name, description, category, manufacturer, model, function, size, color, package_rate, notes, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, description || null, category || null, manufacturer || null, model || null, item_function || null, size || null, color || null, package_rate || null, notes || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null]
+      `INSERT INTO assembly_catalog (name, description, category, manufacturer, model, function, size, color, package_rate, notes, unit, spread_rate, material_cost, material_markup, tax_rate, waste_pct, labor_cost, has_labor, vendor_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, description || null, category || null, manufacturer || null, model || null, item_function || null, size || null, color || null, package_rate || null, notes || null, unit, spread_rate || null, material_cost || 0, material_markup ?? 40, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null]
     );
     res.json(await db.get('SELECT * FROM assembly_catalog WHERE id = ?', [result.lastInsertRowid]));
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -241,10 +253,10 @@ router.post('/api/catalog', async (req, res) => {
 
 router.put('/api/catalog/:id', async (req, res) => {
   try {
-    const { name, description, category, manufacturer, model, function: item_function, size, color, package_rate, notes, unit, spread_rate, material_cost, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
+    const { name, description, category, manufacturer, model, function: item_function, size, color, package_rate, notes, unit, spread_rate, material_cost, material_markup, tax_rate, waste_pct, labor_cost, has_labor, vendor_id } = req.body;
     await db.run(
-      `UPDATE assembly_catalog SET name=?, description=?, category=?, manufacturer=?, model=?, function=?, size=?, color=?, package_rate=?, notes=?, unit=?, spread_rate=?, material_cost=?, tax_rate=?, waste_pct=?, labor_cost=?, has_labor=?, vendor_id=? WHERE id=?`,
-      [name, description || null, category || null, manufacturer || null, model || null, item_function || null, size || null, color || null, package_rate || null, notes || null, unit, spread_rate || null, material_cost || 0, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null, req.params.id]
+      `UPDATE assembly_catalog SET name=?, description=?, category=?, manufacturer=?, model=?, function=?, size=?, color=?, package_rate=?, notes=?, unit=?, spread_rate=?, material_cost=?, material_markup=?, tax_rate=?, waste_pct=?, labor_cost=?, has_labor=?, vendor_id=? WHERE id=?`,
+      [name, description || null, category || null, manufacturer || null, model || null, item_function || null, size || null, color || null, package_rate || null, notes || null, unit, spread_rate || null, material_cost || 0, material_markup ?? 40, tax_rate || 0, waste_pct || 0, labor_cost || 0, has_labor ? 1 : 0, vendor_id || null, req.params.id]
     );
     res.json(await db.get('SELECT * FROM assembly_catalog WHERE id = ?', [req.params.id]));
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -255,6 +267,72 @@ router.delete('/api/catalog/:id', async (req, res) => {
     await db.run('DELETE FROM assembly_catalog WHERE id = ?', [req.params.id]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/api/catalog/import-iris', async (req, res) => {
+  try {
+    const irisUrl = 'https://ocular-iris.com/server/eip/getCatalogProducts?usage=null';
+    const iris = await fetchJson(irisUrl, {
+      'Authorization': `Bearer ${process.env.IRIS_PROD_API_KEY || process.env.IRIS_API_KEY || ''}`,
+      'X-Requested-With': 'XMLHttpRequest',
+      'Accept': 'application/json, text/plain, */*'
+    });
+
+    const rows = Array.isArray(iris.data) ? iris.data : [];
+    let created = 0, updated = 0;
+
+    for (const item of rows) {
+      const name = [item.category_number ? `${item.category_number}` : null, item.category_name, item.product_model, item.product_color].filter(Boolean).join(' - ');
+      const existing = await db.get(
+        'SELECT id FROM assembly_catalog WHERE manufacturer = ? AND model = ? AND color = ? AND size = ? LIMIT 1',
+        [String(item.product_manufacturer || ''), item.product_model || '', item.product_color || '', item.product_size || '']
+      );
+
+      const values = [
+        name || item.product_model || `IRIS ${item.id}`,
+        item.notes || null,
+        item.category_name || null,
+        String(item.product_manufacturer || ''),
+        item.product_model || null,
+        item.product_code ? String(item.product_code) : null,
+        item.product_size || null,
+        item.product_color || null,
+        item.package_rate || null,
+        item.notes || null,
+        mapQtoUnit(item.qto_unit),
+        item.coverage_rate || item.spread_rate || null,
+        item.unit_material_cost || 0,
+        40,
+        0,
+        item.unit_labor_cost || 0,
+        item.unit_labor_cost > 0 ? 1 : 0,
+        null,
+      ];
+
+      if (existing) {
+        await db.run(
+          `UPDATE assembly_catalog SET
+            name=?, description=?, category=?, manufacturer=?, model=?, function=?, size=?, color=?, package_rate=?, notes=?,
+            unit=?, spread_rate=?, material_cost=?, material_markup=?, tax_rate=?, waste_pct=?, labor_cost=?, has_labor=?, vendor_id=?
+           WHERE id=?`,
+          [...values, existing.id]
+        );
+        updated++;
+      } else {
+        await db.run(
+          `INSERT INTO assembly_catalog
+            (name, description, category, manufacturer, model, function, size, color, package_rate, notes, unit, spread_rate, material_cost, material_markup, tax_rate, waste_pct, labor_cost, has_labor, vendor_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          values
+        );
+        created++;
+      }
+    }
+
+    res.json({ ok: true, created, updated, total: rows.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ─── Trade Partners ───────────────────────────────────────────────────────────
@@ -435,6 +513,7 @@ router.post('/api/products/:id/assemblies', async (req, res) => {
         unit = unit || cat.unit;
         spread_rate = spread_rate !== undefined ? spread_rate : cat.spread_rate;
         material_cost = material_cost !== undefined ? material_cost : cat.material_cost;
+        material_markup = material_markup !== undefined ? material_markup : cat.material_markup;
         tax_rate = tax_rate !== undefined ? tax_rate : cat.tax_rate;
         waste_pct = waste_pct !== undefined ? waste_pct : cat.waste_pct;
         labor_cost = labor_cost !== undefined ? labor_cost : cat.labor_cost;

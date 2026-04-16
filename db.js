@@ -123,6 +123,7 @@ async function init() {
         unit TEXT NOT NULL DEFAULT 'each',
         spread_rate REAL,
         material_cost REAL DEFAULT 0,
+        material_markup REAL DEFAULT 40,
         tax_rate REAL DEFAULT 0,
         waste_pct REAL DEFAULT 0,
         labor_cost REAL DEFAULT 0,
@@ -270,6 +271,7 @@ async function init() {
     await safePgAlter(`ALTER TABLE proposals ADD COLUMN status TEXT DEFAULT 'draft'`);
     await safePgAlter(`ALTER TABLE proposals ADD COLUMN notes TEXT`);
     await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
+    await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN material_markup REAL DEFAULT 40`);
     await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN tax_rate REAL DEFAULT 0`);
     await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN waste_pct REAL DEFAULT 0`);
     await safePgAlter(`ALTER TABLE assembly_catalog ADD COLUMN category TEXT`);
@@ -325,6 +327,7 @@ async function init() {
         unit TEXT NOT NULL DEFAULT 'each',
         spread_rate REAL,
         material_cost REAL DEFAULT 0,
+        material_markup REAL DEFAULT 40,
         tax_rate REAL DEFAULT 0,
         waste_pct REAL DEFAULT 0,
         labor_cost REAL DEFAULT 0,
@@ -473,6 +476,7 @@ async function init() {
     safeAlter(`ALTER TABLE proposals ADD COLUMN status TEXT DEFAULT 'draft'`);
     safeAlter(`ALTER TABLE proposals ADD COLUMN notes TEXT`);
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN vendor_id INTEGER REFERENCES vendors(id)`);
+    safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN material_markup REAL DEFAULT 40`);
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN tax_rate REAL DEFAULT 0`);
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN waste_pct REAL DEFAULT 0`);
     safeAlter(`ALTER TABLE assembly_catalog ADD COLUMN category TEXT`);
