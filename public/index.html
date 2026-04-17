@@ -3870,8 +3870,19 @@ ${notesHtml}
     const a = document.createElement('a');
     a.href = url;
     a.download = safeFilename + '.pdf';
+    a.target = '_blank';
+    document.body.appendChild(a);
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    setTimeout(() => {
+      try { document.body.removeChild(a); } catch (_) {}
+      URL.revokeObjectURL(url);
+    }, 5000);
+
+    setTimeout(() => {
+      if (!document.hidden) {
+        try { window.open(url, '_blank', 'noopener,noreferrer'); } catch (_) {}
+      }
+    }, 400);
   } catch(e) {
     alert('PDF export failed: ' + e.message);
   }
