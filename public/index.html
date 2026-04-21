@@ -3759,7 +3759,7 @@ async function exportClientPDF() {
     products.forEach(p => {
       const name = p.product_name || '';
       const qty = p.quantity > 0 ? `${p.quantity} ${p.quantity_unit || ''}` : '';
-      const lead = p.lead_time_days > 0 ? `${p.lead_time_days}d` : '';
+      const lead = p.lead_time_days > 0 ? `${p.lead_time_days} weeks` : '';
       const total = fmt(p.total_sell || 0);
       scopeRows += `<tr>
         <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;color:#171d1a;">
