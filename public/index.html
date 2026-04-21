@@ -2097,7 +2097,7 @@ function renderProductCard(p) {
       <div class="product-card-header">
         <div style="flex:1;">
           <div class="product-card-name">${esc(p.product_name)}${p.vendor_name ? ` <span style="font-size:11px;font-weight:600;background:rgba(204,231,11,0.12);color:#414042;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle;">${esc(p.vendor_name)}</span>` : ''}</div>
-          ${p.scope_type ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#cce70b;background:#414042;border-radius:6px;padding:2px 8px;display:inline-block;margin:3px 0 2px;">${esc(p.scope_type)}</div>` : `<div style="font-size:11px;font-weight:600;color:#94a3b8;border:1px dashed #d8d8d8;border-radius:6px;padding:2px 8px;display:inline-block;margin:3px 0 2px;">No scope — edit to set</div>`}${p.lead_time_days > 0 ? `<span style="font-size:11px;color:#6b6b6c;margin-left:4px">Lead: ${p.lead_time_days}d</span>` : ''}
+          ${p.scope_type ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#cce70b;background:#414042;border-radius:6px;padding:2px 8px;display:inline-block;margin:3px 0 2px;">${esc(p.scope_type)}</div>` : `<div style="font-size:11px;font-weight:600;color:#94a3b8;border:1px dashed #d8d8d8;border-radius:6px;padding:2px 8px;display:inline-block;margin:3px 0 2px;">No scope — edit to set</div>`}${p.lead_time_days > 0 ? `<span style="font-size:11px;color:#6b6b6c;margin-left:4px">Lead: ${p.lead_time_days} weeks</span>` : ''}
           ${p.description || p.color || p.size ? `<div class="product-card-meta">${[p.description,p.color,p.size].filter(Boolean).map(esc).join(' · ')}</div>` : ''}
           <div style="font-size:13px;color:var(--muted);margin-top:2px;">${p.quantity} ${esc(p.quantity_unit)}</div>
         </div>
@@ -3590,7 +3590,7 @@ function openClientView() {
     const qty = pr.quantity ? `${pr.quantity} ${pr.quantity_unit || 'SF'}` : '';
     return `<tr>
       <td><strong>${esc(pr.product_name)}</strong>${desc ? '<br><span style="font-size:12px;color:#6b6b6c">'+esc(desc)+'</span>' : ''}${qty ? '<br><span style="font-size:12px;color:#6b6b6c">Qty: '+esc(qty)+'</span>' : ''}</td>
-      ${hasLeadTime ? `<td style="text-align:center">${pr.lead_time_days > 0 ? pr.lead_time_days + 'd' : '—'}</td>` : ''}
+      ${hasLeadTime ? `<td style="text-align:center">${pr.lead_time_days > 0 ? pr.lead_time_days + ' weeks' : '—'}</td>` : ''}
       <td>${fmt(sell)}</td>
     </tr>`;
   };
