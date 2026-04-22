@@ -3733,12 +3733,8 @@ async function exportClientPDF() {
   const title = data.name + ' — Client Proposal';
   const date = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
-  // Get logo base64 from the client doc img
-  const logoImg = document.querySelector('#client-doc .client-header-logo img, #client-doc img');
-  let logoSrc = logoImg ? logoImg.src : '';
-  if (logoSrc && logoSrc.startsWith('data:') && logoSrc.length > 500000) {
-    logoSrc = '';
-  }
+  // Keep PDF export deterministic. Do not depend on live DOM image sources here.
+  const logoSrc = '';
 
   // Group products by scope type
   const byScope = {};
