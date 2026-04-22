@@ -3735,7 +3735,10 @@ async function exportClientPDF() {
 
   // Get logo base64 from the client doc img
   const logoImg = document.querySelector('#client-doc .client-header-logo img, #client-doc img');
-  const logoSrc = logoImg ? logoImg.src : '';
+  let logoSrc = logoImg ? logoImg.src : '';
+  if (logoSrc && logoSrc.startsWith('data:') && logoSrc.length > 500000) {
+    logoSrc = '';
+  }
 
   // Group products by scope type
   const byScope = {};
@@ -3801,7 +3804,7 @@ body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #171d1
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#171d1a;border-radius:8px;margin-bottom:14px;">
   <tr>
     <td style="padding:14px 18px;vertical-align:middle;">
-      <img src="${logoSrc}" style="height:36px;width:auto;" alt="Focus Flooring">
+      ${logoSrc ? `<img src="${logoSrc}" style="height:36px;width:auto;" alt="Focus Flooring">` : `<div style="font-size:18px;font-weight:800;color:#cce70b;letter-spacing:.04em;">FOCUS FLOORING</div>`}
     </td>
     <td style="padding:14px 18px;vertical-align:middle;text-align:right;">
       <div style="font-size:16px;font-weight:800;color:#cce70b;line-height:1.1;">${esc(data.name)}</div>
