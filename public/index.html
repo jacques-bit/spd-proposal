@@ -3864,25 +3864,32 @@ ${notesHtml}
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ html, filename: safeFilename })
     });
-    if (!resp.ok) throw new Error('PDF generation failed');
+    if (!resp.ok) {
+      let detail = 'PDF generation failed';
+      try {
+        const err = await resp.json();
+        detail = err.error || detail;
+      } catch (_) {
+        try { detail = await resp.text(); } catch (_) {}
+      }
+      throw new Error(detail);
+    }
     const pdfBlob = await resp.blob();
     const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = safeFilename + '.pdf';
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      try { document.body.removeChild(a); } catch (_) {}
-      URL.revokeObjectURL(url);
-    }, 5000);
 
-    setTimeout(() => {
-      if (!document.hidden) {
-        try { window.open(url, '_blank', 'noopener,noreferrer'); } catch (_) {}
-      }
-    }, 400);
+    try {
+      const popup = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!popup) throw new Error('Popup blocked');
+    } catch (_) {
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = safeFilename + '.pdf';
+      document.body.appendChild(a);
+      a.click();
+      try { document.body.removeChild(a); } catch (_) {}
+    }
+
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
   } catch(e) {
     alert('PDF export failed: ' + e.message);
   }
