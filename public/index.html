@@ -3760,12 +3760,25 @@ async function exportClientPDF() {
       const qty = p.quantity > 0 ? `${p.quantity} ${p.quantity_unit || ''}` : '';
       const lead = p.lead_time_days > 0 ? `${p.lead_time_days} weeks` : '';
       const total = fmt(p.total_sell || 0);
+      const material = fmt(p.material_sell || 0);
+      const labor = fmt(p.labor_sell || 0);
+      const assemblies = fmt(p.assembly_sell || 0);
       scopeRows += `<tr>
-        <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;color:#171d1a;">
+        <td style="padding:6px 10px 2px;border-bottom:0;font-size:11px;color:#171d1a;">
           <strong>${esc(name)}</strong>${qty ? `<span style="color:#6b6b6c;margin-left:6px;font-size:10px;">Qty: ${esc(qty)}</span>` : ''}
         </td>
-        <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;color:#6b6b6c;text-align:center;">${lead}</td>
-        <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;font-weight:700;text-align:right;">${total}</td>
+        <td style="padding:6px 10px 2px;border-bottom:0;font-size:11px;color:#6b6b6c;text-align:center;">${lead}</td>
+        <td style="padding:6px 10px 2px;border-bottom:0;font-size:11px;font-weight:700;text-align:right;">${total}</td>
+      </tr>
+      <tr>
+        <td colspan="3" style="padding:0 10px 8px;border-bottom:1px solid #eee;font-size:10px;color:#6b6b6c;">
+          <div style="display:flex;gap:18px;flex-wrap:wrap;">
+            <span><strong style="color:#414042;">Material:</strong> ${material}</span>
+            <span><strong style="color:#414042;">Labor:</strong> ${labor}</span>
+            <span><strong style="color:#414042;">Assemblies:</strong> ${assemblies}</span>
+            <span><strong style="color:#171d1a;">Total:</strong> ${total}</span>
+          </div>
+        </td>
       </tr>`;
       // Subtotal per scope group - add after last item in group
     });
