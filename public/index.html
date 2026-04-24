@@ -3753,40 +3753,33 @@ async function exportClientPDF() {
   const addRows = (products, groupLabel) => {
     if (!products.length) return;
     if (groupLabel) {
-      scopeRows += `<tr><td colspan="3" style="background:#414042;color:#cce70b;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.06em;padding:5px 10px;">${esc(groupLabel)}</td></tr>`;
+      scopeRows += `<tr><td colspan="8" style="background:#8f8f90;color:#ffffff;font-weight:700;font-size:10px;padding:5px 8px;">${esc(groupLabel)}</td></tr>`;
     }
     products.forEach(p => {
       const name = p.product_name || '';
-      const qty = p.quantity > 0 ? `${p.quantity} ${p.quantity_unit || ''}` : '';
-      const lead = p.lead_time_days > 0 ? `${p.lead_time_days} weeks` : '';
+      const qty = Number(p.quantity || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+      const unit = p.quantity_unit || '';
+      const lead = p.lead_time_days > 0 ? `${p.lead_time_days} Wks` : '—';
       const total = fmt(p.total_sell || 0);
       const material = fmt(p.material_sell || 0);
       const labor = fmt(p.labor_sell || 0);
       const assemblies = fmt(p.assembly_sell || 0);
       scopeRows += `<tr>
-        <td style="padding:6px 10px 2px;border-bottom:0;font-size:11px;color:#171d1a;">
-          <strong>${esc(name)}</strong>${qty ? `<span style="color:#6b6b6c;margin-left:6px;font-size:10px;">Qty: ${esc(qty)}</span>` : ''}
-        </td>
-        <td style="padding:6px 10px 2px;border-bottom:0;font-size:11px;color:#6b6b6c;text-align:center;">${lead}</td>
-        <td style="padding:6px 10px 2px;border-bottom:0;font-size:11px;font-weight:700;text-align:right;">${total}</td>
-      </tr>
-      <tr>
-        <td colspan="3" style="padding:0 10px 8px;border-bottom:1px solid #eee;font-size:10px;color:#6b6b6c;">
-          <div style="display:flex;gap:18px;flex-wrap:wrap;">
-            <span><strong style="color:#414042;">Material:</strong> ${material}</span>
-            <span><strong style="color:#414042;">Labor:</strong> ${labor}</span>
-            <span><strong style="color:#414042;">Assemblies:</strong> ${assemblies}</span>
-            <span><strong style="color:#171d1a;">Total:</strong> ${total}</span>
-          </div>
-        </td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;color:#171d1a;font-weight:700;">${esc(name)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;text-align:right;">${qty}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;text-align:center;">${esc(unit)}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;text-align:right;">${labor}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;text-align:right;">${material}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;text-align:right;">${assemblies}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;font-weight:700;text-align:right;">${total}</td>
+        <td style="padding:6px 8px;border-bottom:1px solid #ddd;font-size:10px;text-align:center;">${lead}</td>
       </tr>`;
-      // Subtotal per scope group - add after last item in group
     });
-    // Subtotal
     const groupTotal = products.reduce((s,p) => s + (p.total_sell || 0), 0);
     scopeRows += `<tr>
-      <td colspan="2" style="padding:4px 10px 8px;font-size:10px;font-weight:700;color:#414042;text-align:right;text-transform:uppercase;letter-spacing:.05em;">Subtotal</td>
-      <td style="padding:4px 10px 8px;font-size:11px;font-weight:800;text-align:right;color:#171d1a;">${fmt(groupTotal)}</td>
+      <td colspan="6" style="padding:5px 8px 9px;font-size:10px;font-weight:700;color:#414042;text-align:right;text-transform:uppercase;letter-spacing:.05em;">Subtotal</td>
+      <td style="padding:5px 8px 9px;font-size:10px;font-weight:800;text-align:right;color:#171d1a;">${fmt(groupTotal)}</td>
+      <td style="padding:5px 8px 9px;"></td>
     </tr>`;
   };
 
@@ -3834,12 +3827,17 @@ body { font-family: Helvetica, Arial, sans-serif; font-size: 11px; color: #171d1
 </table>
 
 <!-- SCOPE TABLE -->
-<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e0e0e0;border-radius:6px;overflow:hidden;margin-bottom:12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #cfcfcf;border-radius:0;overflow:hidden;margin-bottom:12px;">
   <thead>
-    <tr style="background:#414042;">
-      <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:#f1f1f1;text-transform:uppercase;letter-spacing:.05em;">Product / Scope</th>
-      <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;color:#f1f1f1;text-transform:uppercase;letter-spacing:.05em;width:70px;">Lead Time</th>
-      <th style="padding:8px 10px;text-align:right;font-size:10px;font-weight:700;color:#f1f1f1;text-transform:uppercase;letter-spacing:.05em;width:90px;">Total</th>
+    <tr style="background:#171d1a;">
+      <th style="padding:7px 8px;text-align:left;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Product</th>
+      <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Final Qty</th>
+      <th style="padding:7px 8px;text-align:center;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Unit</th>
+      <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Labor Cost</th>
+      <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Product Cost</th>
+      <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Assembly Cost</th>
+      <th style="padding:7px 8px;text-align:right;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Total Cost</th>
+      <th style="padding:7px 8px;text-align:center;font-size:9px;font-weight:700;color:#f1f1f1;text-transform:uppercase;">Lead Times</th>
     </tr>
   </thead>
   <tbody>
