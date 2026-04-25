@@ -1280,6 +1280,14 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
     <form id="form-product" onsubmit="submitProductForm(event)">
       <div class="form-row">
         <div class="form-group wide">
+          <label>Pre-built Product Code (optional)</label>
+          <select id="prod-catalog-code" onchange="prefillProductFromCatalog()">
+            <option value="">— Manual product —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group wide">
           <label>Scope Type *</label>
           <select id="prod-scope-type">
             <option value="">— Select Scope —</option>
@@ -1297,12 +1305,12 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group wide"><label>Description</label><input type="text" id="prod-desc" oninput="autoGenProductName()" /></div>
-        <div class="form-group"><label>Color</label><input type="text" id="prod-color" oninput="autoGenProductName()" /></div>
-        <div class="form-group"><label>Size</label><input type="text" id="prod-size" /></div>
+        <div class="form-group wide"><label>Product Name *</label><input type="text" id="prod-name" required /></div>
       </div>
-      <div class="form-row" style="display:none;">
-        <div class="form-group wide"><input type="text" id="prod-name" required /></div>
+      <div class="form-row">
+        <div class="form-group wide"><label>Description</label><input type="text" id="prod-desc" /></div>
+        <div class="form-group"><label>Color</label><input type="text" id="prod-color" /></div>
+        <div class="form-group"><label>Size</label><input type="text" id="prod-size" /></div>
       </div>
       <div class="form-row">
         <div class="form-group wide">
@@ -1653,7 +1661,7 @@ input[type=checkbox] { width: auto; width: 16px; height: 16px; }
     <button class="modal-close" onclick="closeModal('modal-add-from-catalog')">&times;</button>
     <div class="modal-title">Add from Product Catalog</div>
     <div style="margin-bottom:12px;">
-      <input type="text" id="catalog-search" placeholder="Search products…" oninput="filterCatalogPicker()" style="max-width:320px;" />
+      <input type="text" id="catalog-search" placeholder="Search product name/code, description, category…" oninput="filterCatalogPicker()" style="max-width:420px;" />
     </div>
     <div id="catalog-picker-list" style="max-height:400px;overflow-y:auto;"></div>
     <div class="modal-footer">
@@ -2182,28 +2190,69 @@ function populateVendorDropdown(selectId, selectedId) {
     vendors.map(v => `<option value="${v.id}" ${v.id === selectedId ? 'selected' : ''}>${esc(v.name)}</option>`).join('');
 }
 
-function openAddProductModal() {
+async function ensureProductCatalogItems() {
+  if (!productCatalogItems.length) {
+    productCatalogItems = await api('GET', '/api/product-catalog');
+  }
+}
+
+function populateProductCodeDropdown(selectedId) {
+  const sel = document.getElementById('prod-catalog-code');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Manual product —</option>' +
+    productCatalogItems.map(item => {
+      const label = [item.name, item.description].filter(Boolean).join(' — ');
+      const meta = item.category ? ` (${item.category})` : '';
+      return `<option value="${item.id}" ${item.id === selectedId ? 'selected' : ''}>${esc(label + meta)}</option>`;
+    }).join('');
+}
+
+function prefillProductFromCatalog() {
+  const catalogId = parseInt(getVal('prod-catalog-code')) || null;
+  const item = productCatalogItems.find(i => i.id === catalogId);
+  if (!item) return;
+  setVal('prod-name', item.name || '');
+  setVal('prod-desc', item.description || '');
+  setSelect('prod-scope-type', item.category || '');
+  setSelect('prod-qty-unit', item.unit || 'SF');
+  setVal('prod-mat-cost', item.default_material_cost || 0);
+  setVal('prod-mat-markup', item.default_material_markup || 30);
+  setVal('prod-tax', item.default_tax_rate || 7);
+  setVal('prod-vendor', item.default_vendor_fee || 0);
+  setVal('prod-lab-cost', item.default_labor_cost || 0);
+  setVal('prod-lab-markup', item.default_labor_markup || 20);
+  populateVendorDropdown('prod-vendor-id', item.vendor_id || null);
+  updateProductCalcPreview();
+}
+
+async function openAddProductModal() {
   editingProductId = null;
   document.getElementById('modal-product-title').textContent = 'Add Product';
+  await ensureProductCatalogItems();
+  populateProductCodeDropdown(null);
   ['prod-name','prod-desc','prod-color','prod-size'].forEach(id => setVal(id, ''));
   ['prod-qty','prod-waste-pct','prod-package-qty','prod-lead-time','prod-mat-cost','prod-mat-markup','prod-tax','prod-vendor','prod-lab-cost','prod-lab-markup'].forEach(id => setVal(id, ''));
   setSelect('prod-qty-unit', 'SF');
   setSelect('prod-scope-type', '');
+  setSelect('prod-catalog-code', '');
   populateVendorDropdown('prod-vendor-id', null);
   updateProductCalcPreview();
   openModal('modal-product');
 }
 
-function openEditProductModal(id) {
+async function openEditProductModal(id) {
   const product = currentProposalData.products.find(p => p.id === id);
   if (!product) return;
   editingProductId = id;
   document.getElementById('modal-product-title').textContent = 'Edit Product';
+  await ensureProductCatalogItems();
+  populateProductCodeDropdown(null);
+  setSelect('prod-catalog-code', '');
   setSelect('prod-scope-type', product.scope_type || '');
+  setVal('prod-name', product.product_name || '');
   setVal('prod-desc', product.description);
   setVal('prod-color', product.color);
   setVal('prod-size', product.size);
-  autoGenProductName();
   setVal('prod-qty', product.quantity);
   setSelect('prod-qty-unit', product.quantity_unit);
   setVal('prod-waste-pct', product.waste_pct || '');
@@ -3066,9 +3115,7 @@ async function deleteProductCatalogItem(id) {
 //  Add from Product Catalog (to Proposal)
 // ══════════════════════════════════════════════════════════
 async function openAddFromCatalogModal() {
-  if (!productCatalogItems.length) {
-    productCatalogItems = await api('GET', '/api/product-catalog');
-  }
+  await ensureProductCatalogItems();
   setVal('catalog-search', '');
   renderCatalogPicker(productCatalogItems);
   openModal('modal-add-from-catalog');
@@ -3077,7 +3124,8 @@ async function openAddFromCatalogModal() {
 function filterCatalogPicker() {
   const q = getVal('catalog-search').toLowerCase();
   const filtered = productCatalogItems.filter(i =>
-    i.name.toLowerCase().includes(q) ||
+    (i.name || '').toLowerCase().includes(q) ||
+    (i.description || '').toLowerCase().includes(q) ||
     (i.category || '').toLowerCase().includes(q) ||
     (i.vendor_name || '').toLowerCase().includes(q)
   );
@@ -3094,7 +3142,8 @@ function renderCatalogPicker(items) {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='rgba(204,231,11,0.08)'" onmouseout="this.style.background=''" onclick="addFromCatalogItem(${item.id})">
       <div>
         <div style="font-weight:700;font-size:14px;">${esc(item.name)}</div>
-        <div style="font-size:12px;color:var(--muted);">${item.category ? `<span style="background:rgba(65,64,66,0.08);border-radius:4px;padding:1px 6px;">${esc(item.category)}</span> ` : ''}${item.vendor_name ? `<span style="background:rgba(204,231,11,0.12);color:#414042;border-radius:4px;padding:1px 6px;">${esc(item.vendor_name)}</span>` : ''}</div>
+        ${item.description ? `<div style="font-size:12px;color:var(--muted);margin-top:2px;max-width:620px;">${esc(item.description)}</div>` : ''}
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">${item.category ? `<span style="background:rgba(65,64,66,0.08);border-radius:4px;padding:1px 6px;">${esc(item.category)}</span> ` : ''}${item.vendor_name ? `<span style="background:rgba(204,231,11,0.12);color:#414042;border-radius:4px;padding:1px 6px;">${esc(item.vendor_name)}</span>` : ''}</div>
       </div>
       <div style="text-align:right;font-size:13px;">
         <div style="font-weight:700;">${fmt(item.default_material_cost)}/${esc(item.unit)}</div>
